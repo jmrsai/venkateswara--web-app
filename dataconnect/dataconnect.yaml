@@ -1,0 +1,12 @@
+specVersion: "v1alpha"
+serviceId: "temple-service"
+location: "us-central1"
+schema:
+  source: "./schema"
+  datasource:
+    postgresql:
+      database: "temple_db"
+      cloudSql:
+        instanceId: "temple-instance"
+connectorDirs:
+  - "./connector"

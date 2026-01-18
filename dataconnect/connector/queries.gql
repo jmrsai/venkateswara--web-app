@@ -1,0 +1,174 @@
+# Venkathadri Temple Queries & Mutations
+
+# --- Queries ---
+
+# Get all available Sevas
+query GetSevasList @auth(level: PUBLIC) {
+  sevas {
+    id
+    name
+    description
+    price
+    timing
+    day
+    imageUrl
+  }
+}
+
+# Get live temple insights
+query GetTempleInsights @auth(level: PUBLIC) {
+  insights {
+    id
+    ladduStock
+    laddusDistributed
+    annadanamCount
+    nextAarathiTime
+    crowdStatus
+    darshanWaitTime
+    updatedAt
+  }
+}
+
+# Get a user's bookings (requires auth)
+query GetMyBookings($userId: String!) @auth(level: USER) {
+  bookings(where: { userId: { eq: $userId } }) {
+    id
+    date
+    ticketCode
+    status
+    seva {
+      name
+      timing
+    }
+  }
+}
+
+# Get gallery items
+query GetGallery @auth(level: PUBLIC) {
+  galleries {
+    id
+    url
+    caption
+    type
+  }
+}
+
+# --- Mutations ---
+
+# Create a booking
+mutation CreateBooking($sevaId: UUID!, $date: Date!, $name: String!, $mobile: String!, $email: String, $code: String!, $userId: String!) @auth(level: USER) {
+  booking_insert(data: {
+    sevaId: $sevaId,
+    date: $date,
+    devoteeName: $name,
+    mobile: $mobile,
+    email: $email,
+    ticketCode: $code,
+    userId: $userId,
+    status: "Booked"
+  })
+}
+
+# Update temple insights (Admin only - simplification for now)
+mutation UpdateInsights($id: Int!, $crowd: String, $wait: Int) @auth(level: USER) {
+  insight_update(id: $id, data: {
+    crowdStatus: $crowd,
+    darshanWaitTime: $wait
+  })
+}
+
+# Get digital library items
+query GetDigitalLibrary($category: String) @auth(level: PUBLIC) {
+  digitalLibraries(where: { category: { eq: $category } }) {
+    id
+    title
+    description
+    category
+    url
+    format
+    thumbnailUrl
+  }
+}
+
+# Get upcoming events
+query GetUpcomingEvents @auth(level: PUBLIC) {
+  events(orderBy: [{ date: ASC }]) {
+    id
+    title
+    description
+    date
+    startTime
+    endTime
+    location
+    imageUrl
+  }
+}
+
+# Get latest news
+query GetLatestNews @auth(level: PUBLIC) {
+  news_list(orderBy: [{ publishDate: DESC }], limit: 10) {
+    id
+    title
+    content
+    category
+    publishDate
+    imageUrl
+    isCritical
+  }
+}
+
+# Get Panchangam for a specific date
+query GetPanchangam($date: Date!) @auth(level: PUBLIC) {
+  panchangam(key: { date: $date }) {
+    tithi
+    nakshatram
+    yogam
+    karanam
+    sunrise
+    sunset
+    rahukalam
+    yamagandam
+    additionalInfo
+  }
+}
+
+# Get user's donations
+query GetMyDonations($userId: String!) @auth(level: USER) {
+  donations(where: { userId: { eq: $userId } }) {
+    id
+    donorName
+    category
+    amount
+    status
+    createdAt
+    transactionId
+  }
+}
+
+# --- Additional Mutations ---
+
+# Create a donation
+mutation CreateDonation($name: String!, $category: String!, $amount: Int!, $email: String, $txId: String!, $userId: String, $gothram: String) @auth(level: USER) {
+  donation_insert(data: {
+    donorName: $name,
+    category: $category,
+    amount: $amount,
+    email: $email,
+    transactionId: $txId,
+    userId: $userId,
+    gothram: $gothram,
+    status: "Pending"
+  })
+}
+
+# Submit feedback
+mutation SubmitFeedback($name: String!, $email: String, $subject: String, $message: String!, $userId: String) @auth(level: PUBLIC) {
+  feedback_insert(data: {
+    name: $name,
+    email: $email,
+    subject: $subject,
+    message: $message,
+    userId: $userId,
+    status: "Pending"
+  })
+}

@@ -1,0 +1,57 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check if the user is an admin
+    function isAdmin() {
+      return request.auth != null && request.auth.uid == 'zAq3p2QRugN1PIgF9apyylEWTpH3';
+    }
+
+    // Public content: Sevas, Events, News (Read only for public, write for admin)
+    match /sevas/{sevaId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    match /events/{eventId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    match /news/{newsId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // User Profiles: Private and protected
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read: if isAdmin();
+    }
+
+    // Bookings & Donations (Read own, build own, admin full access)
+    match /bookings/{bookingId} {
+      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+
+    match /donations/{donationId} {
+      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null; // Allow initial creation, potentially with null userId if guest
+      allow update, delete: if isAdmin();
+    }
+
+    // Global settings and insights
+    match /site_config/{configId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    match /insights/{insightId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "rules": {
+    "live_stats": {
+      ".read": true,
+      ".write": "auth != null && auth.uid == 'zAq3p2QRugN1PIgF9apyylEWTpH3'"
+    },
+    "announcements": {
+      ".read": true,
+      ".write": "auth != null && auth.uid == 'zAq3p2QRugN1PIgF9apyylEWTpH3'"
+    },
+    "public_config": {
+      ".read": true,
+      ".write": "auth != null && auth.uid == 'zAq3p2QRugN1PIgF9apyylEWTpH3'"
+    },
+    "live_bookings_count": {
+      ".read": true,
+      ".write": "auth != null"
+    },
+    "user_presence": {
+      "$uid": {
+        ".read": true,
+        ".write": "$uid === auth.uid"
+      }
+    }
+  }
+}

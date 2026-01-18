@@ -1,0 +1,10 @@
+connectorId: temple-service
+generate:
+  javascriptSdk:
+    - outputDir: ../../client/src/generated/dataconnect
+      package: "@temple/dataconnect"
+    - outputDir: ..\..\client\src\dataconnect-generated
+      package: "@dataconnect/generated"
+      packageJsonDir: ..\..\client
+      react: true
+      angular: false

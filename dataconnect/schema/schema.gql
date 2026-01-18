@@ -1,0 +1,126 @@
+# Venkathadri Temple Schema
+
+# Sevas Table
+type Seva @table {
+  id: UUID! @default(expr: "uuid_generate_v4()")
+  name: String!
+  description: String
+  price: Int!
+  timing: String
+  day: String
+  imageUrl: String
+  createdAt: Timestamp! @default(expr: "request.time")
+}
+
+# Bookings Table
+type Booking @table {
+  id: UUID! @default(expr: "uuid_generate_v4()")
+  seva: Seva!
+  date: Date!
+  devoteeName: String!
+  mobile: String!
+  email: String
+  ticketCode: String! @unique
+  status: String! @default(value: "Booked")
+  userId: String! @index
+  createdAt: Timestamp! @default(expr: "request.time")
+}
+
+# Donations Table
+type Donation @table {
+  id: UUID! @default(expr: "uuid_generate_v4()")
+  donorName: String!
+  gothram: String
+  category: String!
+  amount: Int!
+  email: String
+  transactionId: String! @unique
+  userId: String
+  status: String! @default(value: "Pending")
+  createdAt: Timestamp! @default(expr: "request.time")
+}
+
+# Insights Table (Single-row or aggregated view)
+type Insight @table {
+  id: Int! @primaryKey
+  ladduStock: Int @default(value: 0)
+  laddusDistributed: Int @default(value: 0)
+  annadanamCount: Int @default(value: 0)
+  nextAarathiTime: String
+  crowdStatus: String @default(value: "Moderate")
+  darshanWaitTime: Int @default(value: 0)
+  updatedAt: Timestamp! @default(expr: "request.time")
+}
+
+# Gallery Table
+type Gallery @table {
+  id: UUID! @default(expr: "uuid_generate_v4()")
+  url: String!
+  caption: String
+  type: String! @default(value: "image")
+  createdAt: Timestamp! @default(expr: "request.time")
+}
+
+# Digital Library Table
+type DigitalLibrary @table {
+  id: UUID! @default(expr: "uuid_generate_v4()")
+  title: String!
+  description: String
+  category: String!
+  url: String!
+  format: String! # e.g., 'pdf', 'audio', 'video'
+  thumbnailUrl: String
+  createdAt: Timestamp! @default(expr: "request.time")
+}
+
+# Events Table
+type Event @table {
+  id: UUID! @default(expr: "uuid_generate_v4()")
+  title: String!
+  description: String
+  date: Date!
+  startTime: String
+  endTime: String
+  location: String
+  imageUrl: String
+  createdAt: Timestamp! @default(expr: "request.time")
+}
+
+# News Table
+type News @table {
+  id: UUID! @default(expr: "uuid_generate_v4()")
+  title: String!
+  content: String!
+  category: String # e.g., 'Temple Update', 'Festival', 'Announcement'
+  publishDate: Date! @default(expr: "request.time")
+  imageUrl: String
+  isCritical: Boolean @default(value: false)
+  createdAt: Timestamp! @default(expr: "request.time")
+}
+
+# Feedback Table
+type Feedback @table {
+  id: UUID! @default(expr: "uuid_generate_v4()")
+  userId: String
+  name: String!
+  email: String
+  subject: String
+  message: String!
+  status: String @default(value: "Pending") # e.g., 'Pending', 'Reviewed', 'Actioned'
+  createdAt: Timestamp! @default(expr: "request.time")
+}
+
+# Panchangam Table
+type Panchangam @table {
+  date: Date! @primaryKey
+  tithi: String
+  nakshatram: String
+  yogam: String
+  karanam: String
+  sunrise: String
+  sunset: String
+  rahukalam: String
+  yamagandam: String
+  additionalInfo: String
+  createdAt: Timestamp! @default(expr: "request.time")
+}
