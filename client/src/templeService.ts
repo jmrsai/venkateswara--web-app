@@ -85,6 +85,15 @@ export const INITIAL_SITE_CONFIG: SiteConfig = {
     socialLinks: {
         youtube: 'https://www.youtube.com/@ramanujampendurthi1012',
         facebook: ''
+    },
+    threeDConfig: {
+        stlUrl: '/tirupati.stl',
+        modelScale: 0.15,
+        initialRotation: [0, 0, 0],
+        ambientIntensity: 0.8,
+        pointIntensity: 1.5,
+        spotIntensity: 2.5,
+        lightColor: '#ffffff'
     }
 };
 
@@ -97,13 +106,65 @@ export const INITIAL_INSIGHTS: TempleInsights = {
     nextAarathiTime: '06:00 PM'
 };
 
+// --- Panchangam Utilities ---
+export const TELUGU_TITHIS = [
+    "అమావాస్య", "శుక్ల పాడ్యమి", "శుక్ల విదియ", "శుక్ల తదియ", "శుక్ల చవితి", "శుక్ల పంచమి", "శుక్ల షష్ఠి", "శుక్ల సప్తమి", "శుక్ల అష్టమి", "శుక్ల నవమి", "శుక్ల దశమి", "శుక్ల ఏకాదశి", "శుక్ల ద్వాదశి", "శుక్ల త్రయోదశి", "శుక్ల చతుర్దశి",
+    "పౌర్ణమి", "కృష్ణ పాడ్యమి", "కృష్ణ విదియ", "కృష్ణ తదియ", "కృష్ణ చవితి", "కృష్ణ పంచమి", "కృష్ణ షష్ఠి", "కృష్ణ సప్తమి", "కృష్ణ అష్టమి", "కృష్ణ నవమి", "కృష్ణ దశమి", "కృష్ణ ఏకాదశి", "కృష్ణ ద్వాదశి", "కృష్ణ త్రయోదశి", "కృష్ణ చతుర్దశి"
+];
+
+export const ENGLISH_TITHIS = [
+    "Amavasya", "Shukla Padyami", "Shukla Vidiya", "Shukla Thadiya", "Shukla Chavithi", "Shukla Panchami", "Shukla Shashti", "Shukla Saptami", "Shukla Ashtami", "Shukla Navami", "Shukla Dashami", "Shukla Ekadashi", "Shukla Dwadashi", "Shukla Trayodashi", "Shukla Chaturdashi",
+    "Pournami", "Krishna Padyami", "Krishna Vidiya", "Krishna Thadiya", "Krishna Chavithi", "Krishna Panchami", "Krishna Shashti", "Krishna Saptami", "Krishna Ashtami", "Krishna Navami", "Krishna Dashami", "Krishna Ekadashi", "Krishna Dwadashi", "Krishna Trayodashi", "Krishna Chaturdashi"
+];
+
+export const TELUGU_NAKSHATRAS = ["అశ్విని", "భరణి", "కృత్తిక", "రోహిణి", "మృగశిర", "ఆర్ద్ర", "పునర్వసు", "పుష్యమి", "ఆశ్లేష", "మఖ", "పూర్వఫల్గుణి", "ఉత్తరఫల్గుణి", "హస్త", "చిత్త", "స్వాతి", "విశాఖ", "అనూరాధ", "జ్యేష్ఠ", "మూల", "పూర్వాషాఢ", "ఉత్తరాషాఢ", "శ్రవణం", "ధనిష్ఠ", "శతభిషం", "పూర్వాభాద్ర", "ఉత్తరాభాద్ర", "రేవతి"];
+export const ENGLISH_NAKSHATRAS = ["Ashwini", "Bharani", "Krithika", "Rohini", "Mrigashira", "Ardra", "Punarvasu", "Pushyami", "Ashlesha", "Makha", "Pubba", "Uttara", "Hastha", "Chitra", "Swathi", "Vishakha", "Anuradha", "Jyeshta", "Moola", "Poorvashada", "Uttarashada", "Shravanam", "Dhanishta", "Shathabhisham", "Poorvabhadra", "Uttarabhadra", "Revathi"];
+
+export const TELUGU_WEEKDAYS = ["ఆదివారం", "సోమవారం", "మంగళవారం", "బుధవారం", "గురువారం", "శుక్రవారం", "శనివారం"];
+export const ENGLISH_WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+export function calculatePanchangam(date: Date, lang: 'en' | 'te' = 'te') {
+    const start = new Date(Date.UTC(2000, 0, 1, 12, 0, 0));
+    const D = (date.getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
+
+    const normalize = (v: number) => { v %= 360; return v < 0 ? v + 360 : v; };
+    const toRad = (d: number) => d * (Math.PI / 180);
+
+    const sunML = normalize(280.460 + 0.98564736 * D);
+    const sunMA = normalize(357.529 + 0.98560028 * D);
+    const sunEL = normalize(sunML + 1.915 * Math.sin(toRad(sunMA)) + 0.020 * Math.sin(toRad(2 * sunMA)));
+    const moonML = normalize(218.316 + 13.176396 * D);
+    const moonMA = normalize(134.963 + 13.064993 * D);
+    const moonEL = normalize(moonML + 6.289 * Math.sin(toRad(moonMA)));
+
+    let angleDiff = normalize(moonEL - sunEL);
+    const tithiIdx = Math.floor(angleDiff / 12);
+    const tithiName = lang === 'te' ? TELUGU_TITHIS[tithiIdx % 30] : ENGLISH_TITHIS[tithiIdx % 30];
+    const nakshatraIdx = Math.floor(moonEL / 13.333333);
+    const nakshatraName = lang === 'te' ? TELUGU_NAKSHATRAS[nakshatraIdx % 27] : ENGLISH_NAKSHATRAS[nakshatraIdx % 27];
+
+    const day = date.getDay();
+    const weekday = lang === 'te' ? TELUGU_WEEKDAYS[day] : ENGLISH_WEEKDAYS[day];
+
+    return {
+        tithi: tithiName,
+        nakshatra: nakshatraName,
+        rahuKalam: lang === 'te' ? '10:30 AM - 12:00 PM' : '10:30 AM - 12:00 PM', // Simplified for demo
+        weekday: weekday,
+        date: date.toLocaleDateString(lang === 'te' ? 'te-IN' : 'en-IN', { day: 'numeric', month: 'long', year: 'numeric' })
+    };
+}
+
+// Calculate initial values
+const todayPanchangam = calculatePanchangam(new Date(), 'en');
+
 export const INITIAL_PANCHANGAM: Panchangam = {
-    date: new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }),
-    tithi: 'Shukla Ekadashi',
-    nakshatra: 'Shravana',
-    yogam: 'Siddha',
-    karanam: 'Bava',
-    rahuKalam: '10:30 AM - 12:00 PM',
+    date: todayPanchangam.date,
+    tithi: todayPanchangam.tithi,
+    nakshatra: todayPanchangam.nakshatra,
+    yogam: 'Siddha', // Static for now as dynamic requires complex calc
+    karanam: 'Bava', // Static for now
+    rahuKalam: todayPanchangam.rahuKalam,
     yamagandam: '03:00 PM - 04:30 PM',
     sunrise: '06:05 AM',
     sunset: '06:12 PM'
@@ -121,11 +182,23 @@ export const FALLBACK_NEWS: NewsItem[] = [
 ];
 
 export const FALLBACK_GALLERY: GalleryItem[] = [
+    { id: 'img11', type: 'image', url: 'https://akcwdjwyhsnaxmtnjuqa.supabase.co/storage/v1/object/public/gallery/img%2011.jpg', caption: 'Temple Premises' },
+    { id: 'img12', type: 'image', url: 'https://akcwdjwyhsnaxmtnjuqa.supabase.co/storage/v1/object/public/gallery/img%2012.jpg', caption: 'Divine Darshan' },
+    { id: 'img13', type: 'image', url: 'https://akcwdjwyhsnaxmtnjuqa.supabase.co/storage/v1/object/public/gallery/img%2013.jpg', caption: 'Temple Architecture' },
+    { id: 'img14', type: 'image', url: 'https://akcwdjwyhsnaxmtnjuqa.supabase.co/storage/v1/object/public/gallery/img%2014.jpg', caption: 'Holy Sanctum' },
+    { id: 'img9', type: 'image', url: 'https://akcwdjwyhsnaxmtnjuqa.supabase.co/storage/v1/object/public/gallery/img%209.jpg', caption: 'Daily Rituals' },
+    { id: 'img8', type: 'image', url: 'https://akcwdjwyhsnaxmtnjuqa.supabase.co/storage/v1/object/public/gallery/img%208.jpg', caption: 'Festival Celebration' },
+    { id: 'img4', type: 'image', url: 'https://akcwdjwyhsnaxmtnjuqa.supabase.co/storage/v1/object/public/gallery/img%204.jpg', caption: 'Temple Gopuram' },
+    { id: 'img17', type: 'image', url: 'https://akcwdjwyhsnaxmtnjuqa.supabase.co/storage/v1/object/public/gallery/img%2017.jpg', caption: 'Venkateswara Swamy' },
+    { id: 'img3', type: 'image', url: 'https://akcwdjwyhsnaxmtnjuqa.supabase.co/storage/v1/object/public/gallery/img%203.jpg', caption: 'Pilgrim Center' },
+    { id: 'img2', type: 'image', url: 'https://akcwdjwyhsnaxmtnjuqa.supabase.co/storage/v1/object/public/gallery/img%202.jpg', caption: 'Main Entrance' },
     { id: 'img10', type: 'image', url: 'https://akcwdjwyhsnaxmtnjuqa.supabase.co/storage/v1/object/public/gallery/img%2010.jpg', caption: 'Venkateswara Swamy' }
 ];
 
 export const FALLBACK_LIBRARY: LibraryItem[] = [
-    { id: 'aud1', type: 'audio', title: 'Sri Venkateswara Suprabhatam', teTitle: 'శ్రీ వేంకటేశ్వర సుప్రభాతం', url: 'https://www.tirumala.org/music/01_Suprabhatam.mp3', description: 'The sacred morning chant to wake up the Lord.', teDescription: 'స్వామివారిని నిద్రలేపే పవిత్ర ఉదయ ప్రార్థన.', duration: '20:15' },
+    { id: 'aud0', type: 'audio', title: 'Govinda Namalu', teTitle: 'గోవింద నామాలు', url: 'https://www.tirumala.org/OtherSankeertans/00%20GOVINDA%20NAMALU/00%20GOVINDA%20NAMALU.mp3', description: 'Sacred chanting of Govinda Namas.', teDescription: 'గోవింద నామాల పవిత్ర నామస్మరణ.', duration: '25:00', author: 'TTD' },
+    { id: 'aud1', type: 'audio', title: 'Sri Venkateswara Suprabhatam', teTitle: 'శ్రీ వేంకటేశ్వర సుప్రభాతం', url: 'https://cs1.mp3.pm/listen/5990686/U0RrWE1UdEVvbXhaN0FSS1VoZmdEVGFFdWhOazdoQXRJTzBMMUVJbDdtc1lUSVJVQTVyQUcwVmVoZE5mSGtGRmR3ZlhSQzhEU2paSkJsZzF0Y0FHWWVsTFRzYmFudVFXaUdjZ1EvTG5aWHR0MHdDN2ZjeHZsUVJQclRsTUpaWCs/M.S._Subbulakshmi_-_Sri_Venkatesa_Suprabhatham_(mp3.pm).mp3', description: 'The sacred morning chant by M.S. Subbulakshmi.', teDescription: 'ఎం.ఎస్. సుబ్బులక్ష్మి గారి మధుర స్వరంలో పవిత్ర ఉదయ ప్రార్థన.', duration: '20:15', author: 'M.S. Subbulakshmi' },
+    { id: 'aud2', type: 'audio', title: 'Vishnu Sahasranamam', teTitle: 'విష్ణు సహస్రనామమ్', url: 'https://cs1.mp3.pm/download/2831159/U0RrWE1UdEVvbXhaN0FSS1VoZmdEVGFFdWhOazdoQXRJTzBMMUVJbDdtdmR0Yk9DTXVadnB2YVF2Q1d1bS81QjhyTm9Fcmtqd3lUdDgrWDRxVGFLUUZrY2dtNUxPWEFCQUc1N2lBOWVRS3plME9DdmYyZWlCbXB0TkNWckdSV3k/M.S._Subbulakshmi_-_Vishnu_Sahasranamam-Stotram_(mp3.pm).mp3', description: 'The thousand names of Lord Vishnu by M.S. Subbulakshmi.', teDescription: 'ఎం.ఎస్. సుబ్బులక్ష్మి గారి మధుర స్వరంలో విష్ణు సహస్రనామ మాలిక.', duration: '30:00', author: 'M.S. Subbulakshmi' },
     { id: 'bk1', type: 'ebook', title: 'Sapthagiri Magazine (Current Month)', teTitle: 'సప్తగిరి మాసపత్రిక (ప్రస్తుత నెల)', url: 'https://www.tirumala.org/Sapthagiri1.aspx', description: 'Official spiritual monthly magazine of TTD.', teDescription: 'తిరుమల తిరుపతి దేవస్థానముల అధికారిక ఆధ్యాత్మిక మాసపత్రిక.', thumbnailUrl: 'https://picsum.photos/seed/sapthagiri/200/300', author: 'TTD Publications' },
 ];
 
@@ -213,8 +286,21 @@ export const templeService = {
             darshanWaitTime: data.darshan_wait_time,
             crowdStatus: data.crowd_status,
             annadanamCount: data.annadanam_count,
-            nextAarathiTime: data.next_aarathi_time
+            nextAarathiTime: data.next_aarathi_time,
+            totalVisitors: data.total_visitors || 0
         };
+    },
+
+    incrementVisitorCount: async (): Promise<void> => {
+        try {
+            await supabase.rpc('increment_total_visitors');
+            // If RPC doesn't exist yet, we can fallback to a direct update if needed, 
+            // but RPC is cleaner for atomic increments.
+            // For now, let's assume we might need a direct way if RPC isn't defined.
+            // But let's stick to the plan of atomic increments.
+        } catch (e) {
+            console.error("Failed to increment visitor count", e);
+        }
     },
 
     // Helper methods as pure functions or simple service exports
@@ -616,6 +702,31 @@ export const templeService = {
         return { success: true };
     },
 
+    // --- News CMS ---
+    getNews: async (): Promise<NewsItem[]> => {
+        const { data, error } = await supabase.from('news').select('*').order('created_at', { ascending: false });
+        if (error || !data || data.length === 0) return FALLBACK_NEWS;
+        return data as NewsItem[];
+    },
+
+    saveNews: async (news: Partial<NewsItem>): Promise<{ success: boolean, message?: string }> => {
+        if (news.id && !news.id.startsWith('fallback')) {
+            const { error } = await supabase.from('news').update(news).eq('id', news.id);
+            if (error) return { success: false, message: error.message };
+        } else {
+            const { id, ...newsData } = news; // remove fallback id if present
+            const { error } = await supabase.from('news').insert([newsData]);
+            if (error) return { success: false, message: error.message };
+        }
+        return { success: true };
+    },
+
+    deleteNews: async (id: string): Promise<{ success: boolean, message?: string }> => {
+        const { error } = await supabase.from('news').delete().eq('id', id);
+        if (error) return { success: false, message: error.message };
+        return { success: true };
+    },
+
     // --- YouTube Integration ---
     getYouTubeVideos: async (channelId: string): Promise<VideoItem[]> => {
         try {
@@ -682,5 +793,25 @@ export const templeService = {
         } catch (error: any) {
             return { success: false, count: 0, message: error.message };
         }
+    },
+
+    // --- Realtime ---
+    subscribeToUpdates: (table: string, callback: (payload: any) => void) => {
+        const channel = supabase
+            .channel(`public-${table}-changes`)
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: table,
+                },
+                (payload) => {
+                    callback(payload);
+                }
+            )
+            .subscribe();
+
+        return channel;
     }
 };

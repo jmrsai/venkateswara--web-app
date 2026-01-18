@@ -39,7 +39,7 @@ import {
     Settings
 } from 'lucide-react'
 import { templeService, INITIAL_INSIGHTS, MOCK_INVENTORY, MOCK_BOOKINGS, INITIAL_SITE_CONFIG } from './templeService'
-import { TempleInsights, InventoryItem, FeedbackItem, SiteConfig, Seva, LibraryItem, VideoItem, Donation, Booking, TempleEvent, DynamicPage, Announcement } from './types'
+import { TempleInsights, InventoryItem, FeedbackItem, SiteConfig, Seva, LibraryItem, VideoItem, NewsItem, Donation, Booking, TempleEvent, DynamicPage, Announcement } from './types'
 import { Language } from './translations'
 
 export function AdminDashboard({ lang, t }: { lang: Language, t: any }) {
@@ -53,12 +53,13 @@ export function AdminDashboard({ lang, t }: { lang: Language, t: any }) {
     const [sevas, setSevas] = useState<Seva[]>([])
     const [library, setLibrary] = useState<LibraryItem[]>([])
     const [videos, setVideos] = useState<VideoItem[]>([])
+    const [news, setNews] = useState<NewsItem[]>([])
     const [pages, setPages] = useState<DynamicPage[]>([])
     const [announcements, setAnnouncements] = useState<Announcement[]>([])
     const [loading, setLoading] = useState(true)
     const [activeTab, setActiveTab] = useState<'insights' | 'rituals' | 'finance' | 'inventory' | 'events' | 'community' | 'broadcast' | 'gallery' | 'feedback' | 'content' | 'settings' | 'pages' | 'announcements'>('insights')
-    const [contentSubTab, setContentSubTab] = useState<'sevas' | 'videos' | 'library'>('sevas')
-    const [settingsSubTab, setSettingsSubTab] = useState<'general' | 'appearance' | 'home' | 'history' | 'features' | 'logistics'>('general')
+    const [contentSubTab, setContentSubTab] = useState<'sevas' | 'videos' | 'library' | 'news'>('sevas')
+    const [settingsSubTab, setSettingsSubTab] = useState<'general' | 'appearance' | 'home' | 'history' | 'features' | 'logistics' | 'darshan'>('general')
     const [allDonations, setAllDonations] = useState<Donation[]>([])
     const [allEvents, setAllEvents] = useState<TempleEvent[]>([])
     const [allNotifications, setAllNotifications] = useState<any[]>([])
@@ -68,8 +69,12 @@ export function AdminDashboard({ lang, t }: { lang: Language, t: any }) {
     const [showAddModal, setShowAddModal] = useState(false)
     const [showPageModal, setShowPageModal] = useState(false)
     const [showAnnModal, setShowAnnModal] = useState(false)
+    const [showInventoryModal, setShowInventoryModal] = useState(false)
+    const [showEventModal, setShowEventModal] = useState(false)
     const [selectedPage, setSelectedPage] = useState<Partial<DynamicPage> | null>(null)
     const [selectedAnn, setSelectedAnn] = useState<Partial<Announcement> | null>(null)
+    const [selectedInventory, setSelectedInventory] = useState<Partial<InventoryItem> | null>(null)
+    const [selectedEvent, setSelectedEvent] = useState<Partial<TempleEvent> | null>(null)
     const [newItem, setNewItem] = useState<any>({ type: 'audio' })
 
     useEffect(() => {
@@ -84,6 +89,7 @@ export function AdminDashboard({ lang, t }: { lang: Language, t: any }) {
                     liveSevas,
                     liveLibrary,
                     liveVideos,
+                    liveNews,
                     liveInventory,
                     liveBookings,
                     liveDonations,
@@ -99,6 +105,7 @@ export function AdminDashboard({ lang, t }: { lang: Language, t: any }) {
                     templeService.getSevas(),
                     templeService.getLibrary(),
                     templeService.getVideos(),
+                    templeService.getNews(),
                     templeService.getInventory(),
                     templeService.getAllBookings(),
                     templeService.getAllDonations(),
@@ -114,6 +121,7 @@ export function AdminDashboard({ lang, t }: { lang: Language, t: any }) {
                 setSevas(liveSevas);
                 setLibrary(liveLibrary);
                 setVideos(liveVideos);
+                setNews(liveNews);
                 setInventory(liveInventory);
                 setBookings(liveBookings);
                 setAllDonations(liveDonations);
@@ -217,6 +225,14 @@ export function AdminDashboard({ lang, t }: { lang: Language, t: any }) {
         }
     };
 
+    const handleDeleteNews = async (id: string) => {
+        if (!confirm("Delete this news article?")) return;
+        const result = await templeService.deleteNews(id);
+        if (result.success) {
+            setNews(news.filter(n => n.id !== id));
+        }
+    };
+
     const handleLibraryUpload = async (file: File) => {
         setUploading(true);
         try {
@@ -271,6 +287,34 @@ export function AdminDashboard({ lang, t }: { lang: Language, t: any }) {
             setNewItem({});
         }
         setIsSaving(false);
+    };
+
+    const handleAddNews = async () => {
+        setIsSaving(true);
+        const result = await templeService.saveNews(newItem);
+        if (result.success) {
+            const updated = await templeService.getNews();
+            setNews(updated);
+            setShowAddModal(false);
+            setNewItem({});
+        }
+        setIsSaving(false);
+    };
+
+    const handleDeleteInventory = async (id: string) => {
+        if (!confirm("Delete this inventory item?")) return;
+        const result = await templeService.deleteInventory(id);
+        if (result.success) {
+            setInventory(inventory.filter(i => i.id !== id));
+        }
+    };
+
+    const handleDeleteEvent = async (id: string) => {
+        if (!confirm("Delete this event?")) return;
+        const result = await templeService.deleteEvent(id);
+        if (result.success) {
+            setAllEvents(allEvents.filter(e => e.id !== id));
+        }
     };
 
     const visitorStats = templeService.getWeeklyVisitorStats()
@@ -389,10 +433,11 @@ export function AdminDashboard({ lang, t }: { lang: Language, t: any }) {
 
                 {activeTab === 'insights' ? (
                     <>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-12">
                             <StatCard title="Today's Donations" value={`₹${donationStats.reduce((a, b) => a + b.value, 0).toLocaleString()}`} icon={IndianRupee} color="bg-green-500" trend="+12%" />
                             <StatCard title="Laddu Stock" value={insights.ladduStock} icon={Package} color="bg-blue-500" />
-                            <StatCard title="Devotees Today" value={insights.annadanamCount} icon={Users} color="bg-orange-500" trend="+5%" />
+                            <StatCard title="Live Visitors" value={5} icon={Users} color="bg-green-500" />
+                            <StatCard title="Total Visits" value={insights.totalVisitors || 0} icon={TrendingUp} color="bg-orange-500" />
                             <StatCard title="Wait Time" value={`${insights.darshanWaitTime}m`} icon={Clock} color="bg-purple-500" />
                         </div>
 
@@ -598,7 +643,7 @@ export function AdminDashboard({ lang, t }: { lang: Language, t: any }) {
                                 <p className="text-3xl font-black text-red-600">{inventory.filter(i => i.stock < i.lowStockThreshold).length}</p>
                                 <p className="text-[10px] text-red-600 font-bold mt-1">Requires immediate attention</p>
                             </div>
-                            <button className="bg-gray-900 p-6 rounded-[32px] text-white shadow-xl flex items-center justify-between group">
+                            <button onClick={() => { setSelectedInventory({}); setShowInventoryModal(true); }} className="bg-gray-900 p-6 rounded-[32px] text-white shadow-xl flex items-center justify-between group">
                                 <div className="text-left">
                                     <h4 className="text-xs font-black opacity-70 uppercase tracking-widest mb-1">Stock Control</h4>
                                     <p className="text-lg font-black">Add Inventory</p>
@@ -647,7 +692,10 @@ export function AdminDashboard({ lang, t }: { lang: Language, t: any }) {
                                                 </td>
                                                 <td className="px-8 py-6 text-sm font-bold text-gray-500">{item.lowStockThreshold} {item.unit}</td>
                                                 <td className="px-8 py-6 text-right">
-                                                    <button className="text-orange-600 text-xs font-black uppercase hover:underline">Update Stock</button>
+                                                    <div className="flex justify-end gap-2">
+                                                        <button onClick={() => { setSelectedInventory(item); setShowInventoryModal(true); }} className="text-orange-600 text-xs font-black uppercase hover:underline">Edit</button>
+                                                        <button onClick={() => handleDeleteInventory(item.id)} className="text-red-500 text-xs font-black uppercase hover:underline">Delete</button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         ))}
@@ -663,7 +711,7 @@ export function AdminDashboard({ lang, t }: { lang: Language, t: any }) {
                                 <h3 className="text-2xl font-black text-gray-900">Festival & Event Calendar</h3>
                                 <p className="text-gray-500 font-medium">Coordinate upcoming celebrations and temple gatherings.</p>
                             </div>
-                            <button className="bg-orange-600 text-white px-8 py-4 rounded-2xl font-black flex items-center gap-2 hover:bg-orange-700 transition-all shadow-xl shadow-orange-900/10">
+                            <button onClick={() => { setSelectedEvent({}); setShowEventModal(true); }} className="bg-orange-600 text-white px-8 py-4 rounded-2xl font-black flex items-center gap-2 hover:bg-orange-700 transition-all shadow-xl shadow-orange-900/10">
                                 <Calendar className="w-5 h-5" /> Schedule Event
                             </button>
                         </div>
@@ -688,9 +736,14 @@ export function AdminDashboard({ lang, t }: { lang: Language, t: any }) {
                                             <span className="text-xs font-black text-gray-900 uppercase tracking-widest">
                                                 {event.registration_required ? 'Registration Open' : 'Free Entry'}
                                             </span>
-                                            <button className="p-2 text-gray-400 hover:text-orange-600 transition-colors">
-                                                <Edit className="w-4 h-4" />
-                                            </button>
+                                            <div className="flex gap-2">
+                                                <button onClick={() => { setSelectedEvent(event); setShowEventModal(true); }} className="p-2 text-gray-400 hover:text-orange-600 transition-colors">
+                                                    <Edit className="w-4 h-4" />
+                                                </button>
+                                                <button onClick={() => handleDeleteEvent(event.id)} className="p-2 text-gray-400 hover:text-red-600 transition-colors">
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -905,6 +958,7 @@ export function AdminDashboard({ lang, t }: { lang: Language, t: any }) {
                             <button onClick={() => setSettingsSubTab('history')} className={`px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${settingsSubTab === 'history' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}>History Page</button>
                             <button onClick={() => setSettingsSubTab('features')} className={`px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${settingsSubTab === 'features' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}>Features</button>
                             <button onClick={() => setSettingsSubTab('logistics')} className={`px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${settingsSubTab === 'logistics' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}>Logistics</button>
+                            <button onClick={() => setSettingsSubTab('darshan')} className={`px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${settingsSubTab === 'darshan' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}>3D Darshan</button>
                         </div>
 
                         <div className="bg-white p-10 rounded-[48px] shadow-2xl border border-gray-100">
@@ -962,6 +1016,71 @@ export function AdminDashboard({ lang, t }: { lang: Language, t: any }) {
                                                 <textarea placeholder="Address" value={config.address} onChange={(e) => setConfig({ ...config, address: e.target.value })} className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-5 py-3 font-bold text-sm" rows={3} />
                                             </div>
                                         </label>
+                                    </div>
+                                </div>
+                            )}
+
+                            {settingsSubTab === 'darshan' && (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                                    <div className="space-y-8">
+                                        <div className="p-8 bg-gray-50 rounded-[40px] border border-gray-100">
+                                            <h4 className="text-sm font-black text-gray-900 uppercase tracking-widest mb-6 flex items-center gap-2">
+                                                <Layout className="w-4 h-4 text-orange-600" />
+                                                Model Configuration
+                                            </h4>
+                                            <div className="space-y-6">
+                                                <label className="block">
+                                                    <span className="text-[10px] font-black uppercase text-gray-500 block mb-2">3D Model (STL URL)</span>
+                                                    <input type="text" value={config.threeDConfig?.stlUrl || ''} onChange={(e) => setConfig({ ...config, threeDConfig: { ...config.threeDConfig!, stlUrl: e.target.value } })} placeholder="/tirupati.stl" className="w-full bg-white border border-gray-200 rounded-2xl px-5 py-3 font-bold text-sm" />
+                                                </label>
+                                                <label className="block">
+                                                    <span className="text-[10px] font-black uppercase text-gray-500 block mb-2">Model Scale ({config.threeDConfig?.modelScale})</span>
+                                                    <input type="range" min="0.01" max="1" step="0.01" value={config.threeDConfig?.modelScale || 0.15} onChange={(e) => setConfig({ ...config, threeDConfig: { ...config.threeDConfig!, modelScale: parseFloat(e.target.value) } })} className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-orange-600" />
+                                                </label>
+                                                <div>
+                                                    <span className="text-[10px] font-black uppercase text-gray-500 block mb-2">Initial Rotation ([X, Y, Z])</span>
+                                                    <div className="grid grid-cols-3 gap-4">
+                                                        {[0, 1, 2].map((i) => (
+                                                            <input key={i} type="number" step="0.1" value={config.threeDConfig?.initialRotation[i] || 0} onChange={(e) => {
+                                                                const newRot = [...(config.threeDConfig?.initialRotation || [0, 0, 0])];
+                                                                newRot[i] = parseFloat(e.target.value);
+                                                                setConfig({ ...config, threeDConfig: { ...config.threeDConfig!, initialRotation: newRot as [number, number, number] } });
+                                                            }} className="w-full bg-white border border-gray-200 rounded-xl px-4 py-2 text-sm font-bold" />
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-8">
+                                        <div className="p-8 bg-orange-50/30 rounded-[40px] border border-orange-100/50">
+                                            <h4 className="text-sm font-black text-orange-950 uppercase tracking-widest mb-6 flex items-center gap-2">
+                                                <Sparkles className="w-4 h-4 text-orange-600" />
+                                                Divine Lighting
+                                            </h4>
+                                            <div className="space-y-6">
+                                                <label className="block">
+                                                    <span className="text-[10px] font-black uppercase text-gray-500 block mb-2">Ambient Intensity ({config.threeDConfig?.ambientIntensity})</span>
+                                                    <input type="range" min="0" max="2" step="0.1" value={config.threeDConfig?.ambientIntensity || 0.8} onChange={(e) => setConfig({ ...config, threeDConfig: { ...config.threeDConfig!, ambientIntensity: parseFloat(e.target.value) } })} className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-orange-600" />
+                                                </label>
+                                                <label className="block">
+                                                    <span className="text-[10px] font-black uppercase text-gray-500 block mb-2">Point Light Intensity ({config.threeDConfig?.pointIntensity})</span>
+                                                    <input type="range" min="0" max="5" step="0.1" value={config.threeDConfig?.pointIntensity || 1.5} onChange={(e) => setConfig({ ...config, threeDConfig: { ...config.threeDConfig!, pointIntensity: parseFloat(e.target.value) } })} className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-orange-600" />
+                                                </label>
+                                                <label className="block">
+                                                    <span className="text-[10px] font-black uppercase text-gray-500 block mb-2">Spot Light Intensity ({config.threeDConfig?.spotIntensity})</span>
+                                                    <input type="range" min="0" max="10" step="0.1" value={config.threeDConfig?.spotIntensity || 2.5} onChange={(e) => setConfig({ ...config, threeDConfig: { ...config.threeDConfig!, spotIntensity: parseFloat(e.target.value) } })} className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-orange-600" />
+                                                </label>
+                                                <label className="block">
+                                                    <span className="text-[10px] font-black uppercase text-gray-500 block mb-2">Light Color</span>
+                                                    <div className="flex items-center gap-4">
+                                                        <input type="color" value={config.threeDConfig?.lightColor || '#ffffff'} onChange={(e) => setConfig({ ...config, threeDConfig: { ...config.threeDConfig!, lightColor: e.target.value } })} className="w-12 h-12 rounded-xl border-0 p-0 overflow-hidden cursor-pointer shadow-sm" />
+                                                        <input type="text" value={config.threeDConfig?.lightColor || '#ffffff'} onChange={(e) => setConfig({ ...config, threeDConfig: { ...config.threeDConfig!, lightColor: e.target.value } })} className="flex-1 bg-white border border-gray-200 rounded-xl px-4 py-2 text-sm font-bold uppercase" />
+                                                    </div>
+                                                </label>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             )}
@@ -1140,6 +1259,7 @@ export function AdminDashboard({ lang, t }: { lang: Language, t: any }) {
                                     <button onClick={() => setContentSubTab('sevas')} className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${contentSubTab === 'sevas' ? 'bg-orange-600 text-white shadow-lg' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}>Sevas</button>
                                     <button onClick={() => setContentSubTab('videos')} className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${contentSubTab === 'videos' ? 'bg-orange-600 text-white shadow-lg' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}>Videos</button>
                                     <button onClick={() => setContentSubTab('library')} className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${contentSubTab === 'library' ? 'bg-orange-600 text-white shadow-lg' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}>Library</button>
+                                    <button onClick={() => setContentSubTab('news')} className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${contentSubTab === 'news' ? 'bg-orange-600 text-white shadow-lg' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}>News</button>
                                 </div>
                             </div>
                             <button
@@ -1149,7 +1269,7 @@ export function AdminDashboard({ lang, t }: { lang: Language, t: any }) {
                                 }}
                                 className="bg-gray-900 text-white px-6 py-3 rounded-2xl font-black flex items-center gap-2 hover:bg-orange-600 transition-all active:scale-95 shadow-lg"
                             >
-                                <Plus className="w-4 h-4" /> Add New {contentSubTab === 'sevas' ? 'Seva' : contentSubTab === 'videos' ? 'Video' : 'Item'}
+                                <Plus className="w-4 h-4" /> Add {contentSubTab === 'sevas' ? 'Seva' : contentSubTab === 'videos' ? 'Video' : contentSubTab === 'news' ? 'News' : 'Item'}
                             </button>
                             {contentSubTab === 'videos' && (
                                 <button
@@ -1246,6 +1366,33 @@ export function AdminDashboard({ lang, t }: { lang: Language, t: any }) {
                             {contentSubTab === 'videos' && videos.length === 0 && (
                                 <div className="text-center py-12 bg-gray-50 rounded-[32px] border-2 border-dashed border-gray-200">
                                     <p className="text-gray-400 font-bold italic">No videos found. Add one from the button above.</p>
+                                </div>
+                            )}
+
+                            {contentSubTab === 'news' && news.map((item) => (
+                                <div key={item.id} className="flex flex-col md:flex-row items-center gap-6 p-6 bg-gray-50 rounded-[32px] border border-transparent hover:border-orange-200 transition-all group">
+                                    <div className="relative w-32 aspect-video rounded-2xl overflow-hidden shadow-md">
+                                        <img src={item.imageUrl || 'https://picsum.photos/seed/news/400/300'} className="w-full h-full object-cover" alt={item.title} />
+                                    </div>
+                                    <div className="flex-1">
+                                        <h4 className="text-xl font-black text-gray-900 mb-1">{item.title}</h4>
+                                        <p className="text-gray-500 text-sm line-clamp-2 mb-2">{item.content}</p>
+                                        <p className="text-xs font-bold text-gray-400">{new Date(item.date).toLocaleDateString()}</p>
+                                    </div>
+                                    <div className="flex gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button className="p-3 bg-white text-gray-700 rounded-xl border border-gray-200 hover:text-orange-600 hover:border-orange-500 transition-all">
+                                            <Edit className="w-5 h-5" />
+                                        </button>
+                                        <button onClick={() => handleDeleteNews(item.id)} className="p-3 bg-red-50 text-red-600 rounded-xl border border-red-100 hover:bg-red-600 hover:text-white transition-all">
+                                            <Trash2 className="w-5 h-5" />
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+
+                            {contentSubTab === 'news' && news.length === 0 && (
+                                <div className="text-center py-12 bg-gray-50 rounded-[32px] border-2 border-dashed border-gray-200">
+                                    <p className="text-gray-400 font-bold italic">No news articles found. Add one from the button above.</p>
                                 </div>
                             )}
                         </div>
@@ -1408,6 +1555,43 @@ export function AdminDashboard({ lang, t }: { lang: Language, t: any }) {
                                             <textarea rows={3} onChange={e => setNewItem({ ...newItem, description: e.target.value })} className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-5 py-4 font-bold outline-none focus:border-orange-500 transition-all" />
                                         </label>
                                     </>
+                                ) : contentSubTab === 'news' ? (
+                                    <>
+                                        <label className="block">
+                                            <span className="text-xs font-black uppercase tracking-widest text-gray-400 mb-2 block">Article Title</span>
+                                            <input type="text" onChange={e => setNewItem({ ...newItem, title: e.target.value })} className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-5 py-4 font-bold outline-none focus:border-orange-500 transition-all" />
+                                        </label>
+                                        <label className="block">
+                                            <span className="text-xs font-black uppercase tracking-widest text-gray-400 mb-2 block">Featured Image</span>
+                                            <div className="flex gap-4 items-center">
+                                                {newItem.imageUrl && <img src={newItem.imageUrl} className="w-16 h-16 rounded-xl object-cover border border-gray-100" alt="Preview" />}
+                                                <div className="relative flex-1">
+                                                    <input
+                                                        type="file"
+                                                        accept="image/*"
+                                                        onChange={async (e) => {
+                                                            const file = e.target.files?.[0];
+                                                            if (file) {
+                                                                setUploading(true);
+                                                                const res = await templeService.uploadImage(file, 'images', 'news');
+                                                                if (res.success && res.url) setNewItem({ ...newItem, imageUrl: res.url });
+                                                                setUploading(false);
+                                                            }
+                                                        }}
+                                                        className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                                                    />
+                                                    <div className="w-full bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl py-4 px-6 text-center font-bold text-gray-500 hover:bg-gray-100 transition-all flex items-center justify-center gap-2">
+                                                        {uploading ? <Loader2 className="w-4 h-4 animate-spin text-orange-600" /> : <ImageIcon className="w-4 h-4" />}
+                                                        {uploading ? 'Uploading...' : 'Upload Image'}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </label>
+                                        <label className="block">
+                                            <span className="text-xs font-black uppercase tracking-widest text-gray-400 mb-2 block">Content</span>
+                                            <textarea rows={6} onChange={e => setNewItem({ ...newItem, content: e.target.value })} className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-5 py-4 font-bold outline-none focus:border-orange-500 transition-all" />
+                                        </label>
+                                    </>
                                 ) : (
                                     <>
                                         <div className="flex gap-4 mb-6 p-2 bg-gray-50 rounded-2xl">
@@ -1461,6 +1645,19 @@ export function AdminDashboard({ lang, t }: { lang: Language, t: any }) {
                             </div>
 
                             <div className="p-8 border-t border-gray-50 bg-gray-50/50 flex gap-4">
+                                <button onClick={() => setShowAddModal(false)} className="flex-1 px-6 py-4 rounded-2xl font-black text-gray-400 hover:bg-gray-100 transition-all">Cancel</button>
+                                <button
+                                    onClick={() => {
+                                        if (contentSubTab === 'sevas') handleAddSeva();
+                                        else if (contentSubTab === 'videos') handleAddVideo();
+                                        else if (contentSubTab === 'news') handleAddNews();
+                                    }}
+                                    disabled={isSaving}
+                                    className="flex-[2] bg-orange-600 text-white px-6 py-4 rounded-2xl font-black flex items-center justify-center gap-2 hover:bg-orange-700 transition-all disabled:opacity-50"
+                                >
+                                    {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                                    Save Record
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -1574,6 +1771,125 @@ export function AdminDashboard({ lang, t }: { lang: Language, t: any }) {
                                     }
                                     setIsSaving(false);
                                 }} className="flex-1 py-4 bg-orange-600 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-orange-700 transition-all shadow-xl shadow-orange-900/10">Broadcast Now</button>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+            {/* Inventory Modal */}
+            {
+                showInventoryModal && selectedInventory && (
+                    <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+                        <div className="bg-white w-full max-w-2xl rounded-[48px] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-300">
+                            <div className="p-10 border-b border-gray-50 flex justify-between items-center">
+                                <div>
+                                    <h3 className="text-2xl font-black text-gray-900 heading-divine">{selectedInventory.id ? 'Edit Inventory' : 'Add Item'}</h3>
+                                    <p className="text-gray-500 font-bold">Manage temple assets and stock levels.</p>
+                                </div>
+                                <button onClick={() => setShowInventoryModal(false)} className="p-3 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-all"><X className="w-6 h-6 text-gray-400" /></button>
+                            </div>
+                            <div className="p-10 space-y-6">
+                                <label className="block">
+                                    <span className="text-xs font-black uppercase tracking-widest text-gray-400 mb-2 block">Item Name</span>
+                                    <input type="text" value={selectedInventory.name || ''} onChange={e => setSelectedInventory({ ...selectedInventory, name: e.target.value })} className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-5 py-4 font-bold outline-none focus:border-orange-500 transition-all" />
+                                </label>
+                                <div className="grid grid-cols-2 gap-6">
+                                    <label className="block">
+                                        <span className="text-xs font-black uppercase tracking-widest text-gray-400 mb-2 block">Category</span>
+                                        <input type="text" value={selectedInventory.category || ''} onChange={e => setSelectedInventory({ ...selectedInventory, category: e.target.value })} className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-5 py-4 font-bold outline-none focus:border-orange-500 transition-all" />
+                                    </label>
+                                    <label className="block">
+                                        <span className="text-xs font-black uppercase tracking-widest text-gray-400 mb-2 block">Unit (e.g. Kg, Pcs)</span>
+                                        <input type="text" value={selectedInventory.unit || ''} onChange={e => setSelectedInventory({ ...selectedInventory, unit: e.target.value })} className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-5 py-4 font-bold outline-none focus:border-orange-500 transition-all" />
+                                    </label>
+                                </div>
+                                <div className="grid grid-cols-2 gap-6">
+                                    <label className="block">
+                                        <span className="text-xs font-black uppercase tracking-widest text-gray-400 mb-2 block">Current Stock</span>
+                                        <input type="number" value={selectedInventory.stock || 0} onChange={e => setSelectedInventory({ ...selectedInventory, stock: parseInt(e.target.value) })} className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-5 py-4 font-bold outline-none focus:border-orange-500 transition-all" />
+                                    </label>
+                                    <label className="block">
+                                        <span className="text-xs font-black uppercase tracking-widest text-gray-400 mb-2 block">Low Stock Threshold</span>
+                                        <input type="number" value={selectedInventory.lowStockThreshold || 0} onChange={e => setSelectedInventory({ ...selectedInventory, lowStockThreshold: parseInt(e.target.value) })} className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-5 py-4 font-bold outline-none focus:border-orange-500 transition-all" />
+                                    </label>
+                                </div>
+                            </div>
+                            <div className="p-10 border-t border-gray-50 bg-gray-50/50 flex gap-4">
+                                <button onClick={() => setShowInventoryModal(false)} className="flex-1 py-4 bg-white border border-gray-200 text-gray-500 rounded-2xl font-black uppercase tracking-widest hover:bg-gray-100 transition-all">Cancel</button>
+                                <button onClick={async () => {
+                                    setIsSaving(true);
+                                    const res = selectedInventory.id
+                                        ? await templeService.updateInventory(selectedInventory.id, selectedInventory)
+                                        : await templeService.addInventory(selectedInventory);
+                                    if (res.success) {
+                                        const updated = await templeService.getInventory();
+                                        setInventory(updated);
+                                        setShowInventoryModal(false);
+                                    }
+                                    setIsSaving(false);
+                                }} className="flex-1 py-4 bg-orange-600 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-orange-700 transition-all shadow-xl shadow-orange-900/10">Save Item</button>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+
+            {/* Event Modal */}
+            {
+                showEventModal && selectedEvent && (
+                    <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+                        <div className="bg-white w-full max-w-3xl rounded-[48px] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-300">
+                            <div className="p-10 border-b border-gray-50 flex justify-between items-center">
+                                <div>
+                                    <h3 className="text-2xl font-black text-gray-900 heading-divine">{selectedEvent.id ? 'Edit Event' : 'Schedule Event'}</h3>
+                                    <p className="text-gray-500 font-bold">Coordinate upcoming temple festivals and celebrations.</p>
+                                </div>
+                                <button onClick={() => setShowEventModal(false)} className="p-3 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-all"><X className="w-6 h-6 text-gray-400" /></button>
+                            </div>
+                            <div className="p-10 space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
+                                <label className="block">
+                                    <span className="text-xs font-black uppercase tracking-widest text-gray-400 mb-2 block">Event Title</span>
+                                    <input type="text" value={selectedEvent.title || ''} onChange={e => setSelectedEvent({ ...selectedEvent, title: e.target.value })} className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-5 py-4 font-bold outline-none focus:border-orange-500 transition-all" />
+                                </label>
+                                <label className="block">
+                                    <span className="text-xs font-black uppercase tracking-widest text-gray-400 mb-2 block">Description</span>
+                                    <textarea value={selectedEvent.description || ''} onChange={e => setSelectedEvent({ ...selectedEvent, description: e.target.value })} className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-5 py-4 font-bold outline-none focus:border-orange-500 transition-all" rows={3} />
+                                </label>
+                                <div className="grid grid-cols-2 gap-6">
+                                    <label className="block">
+                                        <span className="text-xs font-black uppercase tracking-widest text-gray-400 mb-2 block">Category</span>
+                                        <input type="text" value={selectedEvent.category || ''} onChange={e => setSelectedEvent({ ...selectedEvent, category: e.target.value })} className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-5 py-4 font-bold outline-none focus:border-orange-500 transition-all" />
+                                    </label>
+                                    <label className="block">
+                                        <span className="text-xs font-black uppercase tracking-widest text-gray-400 mb-2 block">Start Date</span>
+                                        <input type="datetime-local" value={selectedEvent.start_date ? new Date(selectedEvent.start_date).toISOString().slice(0, 16) : ''} onChange={e => setSelectedEvent({ ...selectedEvent, start_date: e.target.value })} className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-5 py-4 font-bold outline-none focus:border-orange-500 transition-all" />
+                                    </label>
+                                </div>
+                                <label className="block">
+                                    <span className="text-xs font-black uppercase tracking-widest text-gray-400 mb-2 block">Featured Image URL</span>
+                                    <input type="text" value={selectedEvent.image_url || ''} onChange={e => setSelectedEvent({ ...selectedEvent, image_url: e.target.value })} className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-5 py-4 font-bold outline-none focus:border-orange-500 transition-all" />
+                                </label>
+                                <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl">
+                                    <button onClick={() => setSelectedEvent({ ...selectedEvent, registration_required: !selectedEvent.registration_required })} className={`w-12 h-6 rounded-full transition-all relative ${selectedEvent.registration_required ? 'bg-orange-600' : 'bg-gray-300'}`}>
+                                        <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${selectedEvent.registration_required ? 'right-1' : 'left-1'}`} />
+                                    </button>
+                                    <span className="text-xs font-black uppercase tracking-widest text-gray-500">Registration Required</span>
+                                </div>
+                            </div>
+                            <div className="p-10 border-t border-gray-50 bg-gray-50/50 flex gap-4">
+                                <button onClick={() => setShowEventModal(false)} className="flex-1 py-4 bg-white border border-gray-200 text-gray-500 rounded-2xl font-black uppercase tracking-widest hover:bg-gray-100 transition-all">Cancel</button>
+                                <button onClick={async () => {
+                                    setIsSaving(true);
+                                    const res = selectedEvent.id
+                                        ? await templeService.updateEvent(selectedEvent.id, selectedEvent)
+                                        : await templeService.addEvent(selectedEvent);
+                                    if (res.success) {
+                                        const updated = await templeService.getEvents();
+                                        setAllEvents(updated);
+                                        setShowEventModal(false);
+                                    }
+                                    setIsSaving(false);
+                                }} className="flex-1 py-4 bg-orange-600 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-orange-700 transition-all shadow-xl shadow-orange-900/10">Save Event</button>
                             </div>
                         </div>
                     </div>

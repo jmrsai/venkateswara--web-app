@@ -41,8 +41,8 @@ type Donation @table {
 }
 
 # Insights Table (Single-row or aggregated view)
-type Insight @table {
-  id: Int! @primaryKey
+type Insight @table(key: ["id"]) {
+  id: Int!
   ladduStock: Int @default(value: 0)
   laddusDistributed: Int @default(value: 0)
   annadanamCount: Int @default(value: 0)
@@ -111,8 +111,8 @@ type Feedback @table {
 }
 
 # Panchangam Table
-type Panchangam @table {
-  date: Date! @primaryKey
+type Panchangam @table(key: ["date"]) {
+  date: Date!
   tithi: String
   nakshatram: String
   yogam: String

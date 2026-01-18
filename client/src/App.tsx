@@ -48,8 +48,11 @@ import { VideoGallery } from './VideoGallery'
 import { DigitalLibrary } from './DigitalLibrary'
 import { HistoryPage } from './History'
 import { BackgroundMusic } from './BackgroundMusic'
-import { SiteConfig, Seva, DynamicPage, Announcement } from './types'
+import { News } from './News'
+import { VisitorGuidelines } from './components/VisitorGuidelines'
+import { SiteConfig, Seva, DynamicPage, Announcement, NewsItem } from './types'
 import { TRANSLATIONS, Language } from './translations'
+import { supabase } from './supabaseClient'
 
 function App() {
     const [view, setView] = useState('home')
@@ -60,12 +63,15 @@ function App() {
     const [gallery, setGallery] = useState<any[]>([])
     const [pages, setPages] = useState<DynamicPage[]>([])
     const [announcements, setAnnouncements] = useState<Announcement[]>([])
+    const [news, setNews] = useState<NewsItem[]>([])
     const [loading, setLoading] = useState(true)
     const [timeOfDay, setTimeOfDay] = useState(calculateTimeOfDay())
     const [lang, setLang] = useState<Language>('en')
     const [isMenuOpen, setIsMenuOpen] = useState(false)
     const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
     const [showInstallBanner, setShowInstallBanner] = useState(false)
+    const [liveVisitors, setLiveVisitors] = useState(1);
+    const [totalVisits, setTotalVisits] = useState(0);
     const [heroSlideIndex, setHeroSlideIndex] = useState(0)
 
     // Slideshow Auto-Rotation
@@ -85,16 +91,23 @@ function App() {
         const initApp = async () => {
             setLoading(true);
             try {
-                const [liveConfig, liveGallery, liveAnnouncements, livePages] = await Promise.all([
+                const [liveConfig, liveGallery, liveAnnouncements, livePages, liveInsights, liveNews] = await Promise.all([
                     templeService.getSiteConfig(),
                     templeService.getGallery(),
                     templeService.getAnnouncements(true),
-                    templeService.getPages()
+                    templeService.getPages(),
+                    templeService.getInsights(),
+                    templeService.getNews()
                 ]);
                 setConfig(liveConfig);
                 setGallery(liveGallery);
                 setAnnouncements(liveAnnouncements);
                 setPages(livePages);
+                setTotalVisits(liveInsights.totalVisitors || 0);
+                setNews(liveNews);
+
+                // Increment total visitors on page load
+                await templeService.incrementVisitorCount();
 
                 const session = await templeService.getSession();
                 if (session.data.session) {
@@ -107,13 +120,69 @@ function App() {
         };
         initApp();
 
+        // Real-time Subscriptions
+        const subscriptions = [
+            templeService.subscribeToUpdates('site_config', (payload) => {
+                if (payload.new) setConfig(payload.new as SiteConfig);
+            }),
+            templeService.subscribeToUpdates('announcements', async () => {
+                const liveAnnouncements = await templeService.getAnnouncements(true);
+                setAnnouncements(liveAnnouncements);
+            }),
+            templeService.subscribeToUpdates('gallery', async () => {
+                const liveGallery = await templeService.getGallery();
+                setGallery(liveGallery);
+            }),
+            templeService.subscribeToUpdates('pages', async () => {
+                const livePages = await templeService.getPages();
+                setPages(livePages);
+            }),
+            templeService.subscribeToUpdates('news', async () => {
+                const liveNews = await templeService.getNews();
+                setNews(liveNews);
+            }),
+            templeService.subscribeToUpdates('insights', (payload) => {
+                if (payload.new && (payload.new as any).total_visitors) {
+                    setTotalVisits((payload.new as any).total_visitors);
+                }
+            })
+        ];
+
         // Listen for Auth Changes
         const { data: authListener } = templeService.onAuthStateChange((session) => {
             handleUser(session?.user ?? null);
         });
 
+        // Realtime Presence Tracking
+        const channel = supabase.channel('online-users', {
+            config: {
+                presence: {
+                    key: 'user-' + Math.random().toString(36).substr(2, 9),
+                },
+            },
+        });
+
+        channel
+            .on('presence', { event: 'sync' }, () => {
+                const state = channel.presenceState();
+                setLiveVisitors(Object.keys(state).length);
+            })
+            .on('presence', { event: 'join' }, ({ key, newPresences }: { key: string, newPresences: any[] }) => {
+                // Potential notification or log
+            })
+            .on('presence', { event: 'leave' }, ({ key, leftPresences }: { key: string, leftPresences: any[] }) => {
+                // Potential notification or log
+            })
+            .subscribe(async (status: string) => {
+                if (status === 'SUBSCRIBED') {
+                    await channel.track({ online_at: new Date().toISOString() });
+                }
+            });
+
         return () => {
             authListener?.subscription.unsubscribe();
+            channel.unsubscribe();
+            subscriptions.forEach(sub => sub.unsubscribe());
         };
     }, []);
 
@@ -278,6 +347,7 @@ function App() {
                         <NavItem label={t.sevas} id="seva" icon={null} />
                         <NavItem label={t.gallery} id="gallery" icon={null} />
                         <NavItem label={t.videoGallery} id="video" icon={null} />
+                        <NavItem label={t.news} id="news" icon={null} />
                         <NavItem label={t.library} id="library" icon={null} />
                         <NavItem label={t.threeDDarshan} id="darshan3d" icon={null} />
                         <NavItem label={t.donation} id="donation" icon={null} />
@@ -333,6 +403,8 @@ function App() {
                             <NavItem label={t.history} id="history" icon={null} />
                             <NavItem label={t.sevas} id="seva" icon={null} />
                             <NavItem label={t.gallery} id="gallery" icon={null} />
+                            <NavItem label={t.videoGallery} id="video" icon={null} />
+                            <NavItem label={t.news} id="news" icon={null} />
                             <NavItem label={t.library} id="library" icon={null} />
                             <NavItem label={t.threeDDarshan} id="darshan3d" icon={null} />
                             {pages.filter(p => p.is_active && p.show_in_nav).map(page => (
@@ -432,7 +504,7 @@ function App() {
                             )}
 
                             {/* Golden Overlay Pattern */}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-black/20 flex flex-col justify-end pb-16 px-4 md:px-20 z-10">
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-black/20 flex flex-col justify-end pb-8 px-4 md:px-20 z-10">
                                 <div className="container mx-auto animate-fade-in-up">
                                     <div className="w-16 h-1 bg-amber-500 mb-6"></div>
                                     <h2 className="text-4xl md:text-6xl font-serif font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-amber-400 to-amber-200 drop-shadow-sm mb-2 leading-tight">
@@ -466,6 +538,59 @@ function App() {
                                 </div>
                             )}
                         </section>
+
+                        {/* Quick Stats Grid */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
+                            {[
+                                { icon: Clock, label: t.waitTime, value: '45 Mins', color: 'text-orange-600' },
+                                { icon: Users, label: t.crowdStatus, value: 'Moderate', color: 'text-blue-600' },
+                                { icon: Heart, label: t.annadanam, value: 'Available', color: 'text-green-600' },
+                                { icon: Sparkles, label: 'Live Darshan', value: 'Active', color: 'text-purple-600' }
+                            ].map((stat, i) => (
+                                <div key={i} className="glass-morphism p-6 rounded-[32px] border border-orange-50 flex flex-col items-center text-center group hover:scale-105 transition-all duration-500">
+                                    <div className={`p-3 rounded-2xl bg-white/50 mb-3 ${stat.color} shadow-inner group-hover:bg-orange-600 group-hover:text-white transition-colors`}>
+                                        <stat.icon size={20} />
+                                    </div>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">{stat.label}</p>
+                                    <p className="text-sm font-black text-gray-900">{stat.value}</p>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Ongoing Events & Highlighted Sevas */}
+                        <section className="space-y-10">
+                            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                                <div>
+                                    <span className="inline-block px-4 py-1.5 bg-orange-100 text-orange-700 text-[10px] font-black uppercase tracking-widest rounded-full mb-4">Spiritual Calendar</span>
+                                    <h2 className="text-4xl font-black text-gray-900 heading-divine leading-none">{lang === 'te' ? 'జరుగుతున్న' : 'Ongoing'} <span className="text-orange-600">{lang === 'te' ? 'ఉత్సవాలు' : 'Events'}</span></h2>
+                                </div>
+                                <button onClick={() => setView('seva')} className="text-xs font-black uppercase tracking-widest text-orange-600 flex items-center gap-2 hover:translate-x-2 transition-transform">
+                                    View All Sevas <ArrowRight className="w-4 h-4" />
+                                </button>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                {[
+                                    { title: 'Samatha Kumbh 2026', date: 'Feb 1 - Feb 10', img: 'https://akcwdjwyhsnaxmtnjuqa.supabase.co/storage/v1/object/public/images/channels4_banner.jpg' },
+                                    { title: 'Ardra Nakshatram', date: 'Every Month', img: 'https://images.unsplash.com/photo-1604510313580-998835821c60?auto=format&fit=crop&q=80&w=800' },
+                                    { title: 'Special Kalyanotsavam', date: 'Daily', img: 'https://images.unsplash.com/photo-1544006659-f0b21884cb1d?auto=format&fit=crop&q=80&w=800' }
+                                ].map((event, i) => (
+                                    <div key={i} className="group relative rounded-[40px] overflow-hidden bg-white shadow-xl hover:shadow-2xl transition-all border border-orange-50 h-[400px]">
+                                        <img src={event.img} alt={event.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000 opacity-90" />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex flex-col justify-end p-8">
+                                            <p className="text-orange-400 text-[10px] font-black uppercase tracking-[0.3em] mb-2">{event.date}</p>
+                                            <h4 className="text-2xl font-black text-white heading-divine mb-4 group-hover:text-orange-300 transition-colors">{event.title}</h4>
+                                            <button onClick={() => setView('donation')} className="w-full py-4 bg-white/10 backdrop-blur-md border border-white/20 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-orange-600 hover:border-orange-600 transition-all">
+                                                Participate Now
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </section>
+
+                        {/* Visitor Guidelines Integration */}
+                        <VisitorGuidelines lang={lang} />
 
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
                             <div className="lg:col-span-2 space-y-12">
@@ -563,6 +688,50 @@ function App() {
                                 </div>
                             </div>
                         </div>
+
+                        {/* Latest News Section */}
+                        <section className="animate-divine" style={{ animationDelay: '400ms' }}>
+                            <div className="flex justify-between items-end mb-10">
+                                <div>
+                                    <h3 className="text-4xl font-black text-gray-900 heading-divine leading-tight">Latest Announcements</h3>
+                                    <p className="text-orange-600 font-bold uppercase tracking-widest text-[10px] mt-2">Temple Updates & News</p>
+                                </div>
+                                <button onClick={() => setView('news')} className="group flex items-center gap-3 bg-white px-8 py-4 rounded-2xl border border-orange-100 shadow-sm hover:shadow-xl transition-all active:scale-95 text-xs font-black uppercase tracking-widest text-orange-950">
+                                    View All News <ArrowRight className="w-5 h-5 text-orange-500 group-hover:translate-x-2 transition-transform" />
+                                </button>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                                {news.length > 0 ? news.slice(0, 3).map((item) => (
+                                    <div key={item.id} className="group bg-white rounded-[40px] overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-700 border border-gray-100 flex flex-col">
+                                        <div className="relative aspect-[4/3] overflow-hidden">
+                                            <img src={item.imageUrl || `https://picsum.photos/seed/${item.id}/800/600`} alt={item.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" />
+                                            <div className="absolute top-6 left-6 p-2 bg-white/20 backdrop-blur-md rounded-2xl border border-white/20">
+                                                <Sparkles className="w-5 h-5 text-white" />
+                                            </div>
+                                        </div>
+                                        <div className="p-8 flex-1 flex flex-col">
+                                            <div className="flex items-center gap-2 mb-4 text-[10px] font-black uppercase tracking-widest text-orange-600">
+                                                <Calendar className="w-3.5 h-3.5" />
+                                                {new Date(item.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+                                            </div>
+                                            <h4 className="text-xl font-black text-gray-900 mb-4 leading-tight group-hover:text-orange-600 transition-colors line-clamp-2">
+                                                {item.title}
+                                            </h4>
+                                            <p className="text-gray-500 text-xs font-medium leading-relaxed line-clamp-2 opacity-80 mb-6">
+                                                {item.content}
+                                            </p>
+                                            <button onClick={() => setView('news')} className="mt-auto text-orange-600 font-extrabold text-[10px] uppercase tracking-widest flex items-center gap-2 hover:gap-3 transition-all">
+                                                Read More <ArrowRight className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                )) : (
+                                    <div className="col-span-full py-16 text-center bg-white/40 backdrop-blur-md rounded-[40px] border-2 border-dashed border-orange-100 italic text-gray-400 font-bold">
+                                        Stay tuned for sacred updates from the temple administration.
+                                    </div>
+                                )}
+                            </div>
+                        </section>
                     </div>
                 )}
 
@@ -573,6 +742,7 @@ function App() {
                             <h2 className="text-5xl font-black text-gray-900 mb-4">{lang === 'te' ? 'దివ్య' : 'Divine'} <span className="text-orange-600">{lang === 'te' ? 'దర్శనం' : 'Glimpses'}</span></h2>
                             <p className="text-gray-500 max-w-2xl mx-auto font-medium">{t.exploreBeauty}</p>
                         </div>
+
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                             {gallery.length > 0 ? gallery.map((item, idx) => (
@@ -595,6 +765,7 @@ function App() {
 
                 {view === 'seva' && <SevaBooking lang={lang} t={t} />}
                 {view === 'video' && <VideoGallery lang={lang} t={t} />}
+                {view === 'news' && <News lang={lang} t={t} />}
                 {view === 'library' && <DigitalLibrary lang={lang} t={t} />}
                 {view === 'donation' && <Donations lang={lang} t={t} />}
                 {view === 'history' && <HistoryPage lang={lang} t={t} config={config} />}
@@ -606,7 +777,7 @@ function App() {
                                 <p className="text-orange-600 font-black uppercase tracking-widest animate-pulse">Invoking Divine 3D Vision...</p>
                             </div>
                         }>
-                            <ThreeDDarshan />
+                            <ThreeDDarshan config={config} />
                         </Suspense>
                     </div>
                 )}
@@ -614,7 +785,7 @@ function App() {
                 {view === 'login' && <Login onLogin={handleLogin} lang={lang} t={t} />}
 
                 {/* Dynamic Pages Logic */}
-                {!['home', 'history', 'seva', 'gallery', 'video', 'library', 'darshan3d', 'donation', 'admin', 'login'].includes(view) && (
+                {!['home', 'history', 'seva', 'gallery', 'video', 'news', 'library', 'darshan3d', 'donation', 'admin', 'login'].includes(view) && (
                     <div className="pt-32 pb-20 max-w-4xl mx-auto px-6 animate-in fade-in slide-in-from-bottom-5 duration-700">
                         {loading ? (
                             <div className="flex flex-col items-center justify-center py-20">
@@ -755,9 +926,12 @@ function App() {
                         </div>
 
                         {/* Live Visitors Counter */}
-                        <div className="inline-flex items-center gap-3 bg-black/40 px-6 py-2.5 rounded-full border border-[#d4ac0d]/20 shadow-xl">
-                            <div className="w-2 h-2 bg-green-500 rounded-full animate-ping" />
-                            <span className="text-[10px] font-black uppercase tracking-widest text-[#d4ac0d]">Live Visitors: 5</span>
+                        <div className="flex flex-col items-center gap-4">
+                            <div className="inline-flex items-center gap-3 bg-black/40 px-6 py-2.5 rounded-full border border-[#d4ac0d]/20 shadow-xl">
+                                <div className="w-2 h-2 bg-green-500 rounded-full animate-ping" />
+                                <span className="text-[10px] font-black uppercase tracking-widest text-[#d4ac0d]">Live Visitors: {liveVisitors}</span>
+                            </div>
+                            <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Total Blessed Visits: {totalVisits.toLocaleString()}+</p>
                         </div>
 
                         <div className="pt-12">

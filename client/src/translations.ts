@@ -101,7 +101,8 @@ export const TRANSLATIONS = {
         aiInsights: 'AI Insights',
         generateAiReport: 'Generate AI Report',
         divineInsights: 'Divine Insights',
-        aiExplanation: 'Gemini AI analyzes devotee feedback to provide actionable suggestions for temple enhancement.'
+        aiExplanation: 'Gemini AI analyzes devotee feedback to provide actionable suggestions for temple enhancement.',
+        news: 'News'
     },
     te: {
         templeName: 'వేంకటాద్రి పెందుర్తి',
@@ -205,7 +206,8 @@ export const TRANSLATIONS = {
         generateAiReport: 'AI నివేదికను రూపొందించండి',
         divineInsights: 'దివ్య అంతర్దృష్టులు',
         aiExplanation: 'Gemini AI భక్తుల అభిప్రాయాలను విశ్లేషించి, ఆలయ అభివృద్ధికి సలహాలను అందిస్తుంది.',
-        threeDDarshan: '3D దర్శనం'
+        threeDDarshan: '3D దర్శనం',
+        news: 'వార్తలు'
     }
 };
 

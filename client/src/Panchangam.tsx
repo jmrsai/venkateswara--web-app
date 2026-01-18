@@ -1,5 +1,7 @@
 import { Sun, Moon, MapPin, Calendar as CalendarIcon } from 'lucide-react'
 import { Language } from './translations'
+import { INITIAL_PANCHANGAM } from './templeService';
+
 
 interface PanchangamProps {
     lang: Language;
@@ -10,16 +12,14 @@ export function Panchangam({ lang, t }: PanchangamProps) {
     const today = new Date();
     const dayName = today.toLocaleDateString('en-US', { weekday: 'long' });
 
-    // Mock data based on day of week for demonstration
     const data = {
-        Sunday: { tithi: 'Saptami', nakshatra: 'Ashwini', sunrise: '06:12', sunset: '17:45', rahu: '16:30 - 18:00', yamagandam: '12:00 - 13:30' },
-        Monday: { tithi: 'Ashtami', nakshatra: 'Bharani', sunrise: '06:13', sunset: '17:46', rahu: '07:30 - 09:00', yamagandam: '10:30 - 12:00' },
-        Tuesday: { tithi: 'Navami', nakshatra: 'Krittika', sunrise: '06:13', sunset: '17:46', rahu: '15:00 - 16:30', yamagandam: '09:00 - 10:30' },
-        Wednesday: { tithi: 'Dashami', nakshatra: 'Rohini', sunrise: '06:14', sunset: '17:47', rahu: '12:00 - 13:30', yamagandam: '07:30 - 09:00' },
-        Thursday: { tithi: 'Ekadashi', nakshatra: 'Mrigashira', sunrise: '06:14', sunset: '17:48', rahu: '13:30 - 15:00', yamagandam: '06:00 - 07:30' },
-        Friday: { tithi: 'Dwadashi', nakshatra: 'Ardra', sunrise: '06:15', sunset: '17:49', rahu: '10:30 - 12:00', yamagandam: '15:00 - 16:30' },
-        Saturday: { tithi: 'Trayodashi', nakshatra: 'Punarvasu', sunrise: '06:15', sunset: '17:50', rahu: '09:00 - 10:30', yamagandam: '13:30 - 15:00' }
-    }[dayName] || { tithi: 'Purnima', nakshatra: 'Pushya', sunrise: '06:10', sunset: '17:40', rahu: 'N/A', yamagandam: 'N/A' };
+        tithi: INITIAL_PANCHANGAM.tithi,
+        nakshatra: INITIAL_PANCHANGAM.nakshatra,
+        sunrise: INITIAL_PANCHANGAM.sunrise,
+        sunset: INITIAL_PANCHANGAM.sunset,
+        rahu: INITIAL_PANCHANGAM.rahuKalam,
+        yamagandam: INITIAL_PANCHANGAM.yamagandam
+    };
 
     // Telugu Mappings
     const teTithis: any = { 'Saptami': 'సప్తమి', 'Ashtami': 'అష్టమి', 'Navami': 'నవమి', 'Dashami': 'దశమి', 'Ekadashi': 'ఏకాదశి', 'Dwadashi': 'ద్వాదశి', 'Trayodashi': 'త్రయోదశి', 'Purnima': 'పూర్ణిమ' };

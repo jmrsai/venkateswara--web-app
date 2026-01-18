@@ -38,6 +38,16 @@ export interface SocialLinks {
     facebook?: string;
 }
 
+export interface ThreeDConfig {
+    stlUrl: string;
+    modelScale: number;
+    initialRotation: [number, number, number];
+    ambientIntensity: number;
+    pointIntensity: number;
+    spotIntensity: number;
+    lightColor: string;
+}
+
 export interface SiteConfig {
     templeName: string;
     subTitle: string;
@@ -49,6 +59,7 @@ export interface SiteConfig {
     address: string;
     mapEmbedUrl?: string;
     whatsappChannel?: string;
+    stlUrl?: string;
     panchangamImageUrl?: string;
     historyContent?: string;
     historyImageUrl?: string;
@@ -63,6 +74,7 @@ export interface SiteConfig {
     darshanSlotCapacity: number;
     donationAmounts: number[];
     donationCategories: string[];
+    threeDConfig: ThreeDConfig;
     seo?: SeoConfig;
     socialLinks?: SocialLinks;
 }
@@ -74,6 +86,7 @@ export interface TempleInsights {
     crowdStatus: 'Low' | 'Moderate' | 'High';
     annadanamCount: number;
     nextAarathiTime: string;
+    totalVisitors?: number;
 }
 
 export interface WeatherData {

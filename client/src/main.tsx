@@ -6,19 +6,23 @@ import './index.css'
 // Global Error Handler for Production Debugging
 window.onerror = function (msg, url, line, col, error) {
     console.error("GLOBAL ERROR CAPTURED:", msg, url, line, col, error);
-    const errorContainer = document.getElementById('root');
-    if (errorContainer) {
-        errorContainer.innerHTML = `
-            <div style="padding: 40px; color: #721c24; background: #fffbf0; border: 4px solid #721c24; font-family: sans-serif; border-radius: 20px; margin: 20px;">
-                <h1 style="margin: 0 0 20px 0;">Divine Intervention Required</h1>
-                <p>The application encountered a sacred runtime error.</p>
-                <pre style="background: #f8d7da; padding: 20px; border-radius: 10px; overflow: auto; max-height: 400px; font-size: 14px;">
+
+    // Use a timeout to avoid conflicts with React's current commit phase
+    setTimeout(() => {
+        const errorContainer = document.getElementById('root');
+        if (errorContainer) {
+            errorContainer.innerHTML = `
+                <div style="padding: 40px; color: #721c24; background: #fffbf0; border: 4px solid #721c24; font-family: sans-serif; border-radius: 20px; margin: 20px;">
+                    <h1 style="margin: 0 0 20px 0;">Divine Intervention Required</h1>
+                    <p>The application encountered a sacred runtime error.</p>
+                    <pre style="background: #f8d7da; padding: 20px; border-radius: 10px; overflow: auto; max-height: 400px; font-size: 14px;">
 ${msg}\nat ${url}:${line}:${col}\n\n${error?.stack || 'No stack trace'}
-                </pre>
-                <button onclick="window.location.reload()" style="background: #721c24; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold;">Re-invocate Application</button>
-            </div>
-        `;
-    }
+                    </pre>
+                    <button onclick="window.location.reload()" style="background: #721c24; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold;">Re-invocate Application</button>
+                </div>
+            `;
+        }
+    }, 0);
     return false;
 };
 
