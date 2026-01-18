@@ -2,7 +2,7 @@
 
 # Sevas Table
 type Seva @table {
-  id: UUID! @default(expr: "uuid_generate_v4()")
+  id: UUID! @default(expr: "uuidV4()")
   name: String!
   description: String
   price: Int!
@@ -14,7 +14,7 @@ type Seva @table {
 
 # Bookings Table
 type Booking @table {
-  id: UUID! @default(expr: "uuid_generate_v4()")
+  id: UUID! @default(expr: "uuidV4()")
   seva: Seva!
   date: Date!
   devoteeName: String!
@@ -28,7 +28,7 @@ type Booking @table {
 
 # Donations Table
 type Donation @table {
-  id: UUID! @default(expr: "uuid_generate_v4()")
+  id: UUID! @default(expr: "uuidV4()")
   donorName: String!
   gothram: String
   category: String!
@@ -54,7 +54,7 @@ type Insight @table(key: ["id"]) {
 
 # Gallery Table
 type Gallery @table {
-  id: UUID! @default(expr: "uuid_generate_v4()")
+  id: UUID! @default(expr: "uuidV4()")
   url: String!
   caption: String
   type: String! @default(value: "image")
@@ -63,7 +63,7 @@ type Gallery @table {
 
 # Digital Library Table
 type DigitalLibrary @table {
-  id: UUID! @default(expr: "uuid_generate_v4()")
+  id: UUID! @default(expr: "uuidV4()")
   title: String!
   description: String
   category: String!
@@ -75,7 +75,7 @@ type DigitalLibrary @table {
 
 # Events Table
 type Event @table {
-  id: UUID! @default(expr: "uuid_generate_v4()")
+  id: UUID! @default(expr: "uuidV4()")
   title: String!
   description: String
   date: Date!
@@ -88,7 +88,7 @@ type Event @table {
 
 # News Table
 type News @table {
-  id: UUID! @default(expr: "uuid_generate_v4()")
+  id: UUID! @default(expr: "uuidV4()")
   title: String!
   content: String!
   category: String # e.g., 'Temple Update', 'Festival', 'Announcement'
@@ -100,7 +100,7 @@ type News @table {
 
 # Feedback Table
 type Feedback @table {
-  id: UUID! @default(expr: "uuid_generate_v4()")
+  id: UUID! @default(expr: "uuidV4()")
   userId: String
   name: String!
   email: String

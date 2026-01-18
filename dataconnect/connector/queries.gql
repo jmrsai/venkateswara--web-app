@@ -106,7 +106,7 @@ query GetUpcomingEvents @auth(level: PUBLIC) {
 
 # Get latest news
 query GetLatestNews @auth(level: PUBLIC) {
-  news_list(orderBy: [{ publishDate: DESC }], limit: 10) {
+  newss(orderBy: [{ publishDate: DESC }], limit: 10) {
     id
     title
     content
