@@ -21,7 +21,7 @@ export function VideoGallery({ lang, t }: { lang: Language, t: any }) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
                 <Loader2 className="w-12 h-12 text-orange-600 animate-spin" />
-                <p className="text-gray-500 font-bold italic">Loading Divine Visuals...</p>
+                <p className="text-gray-500 font-bold italic"><span>Loading Divine Visuals...</span></p>
             </div>
         );
     }
@@ -58,11 +58,11 @@ export function VideoGallery({ lang, t }: { lang: Language, t: any }) {
                                 </a>
                             </div>
                             <div className="absolute top-4 left-4 bg-black/40 backdrop-blur-md text-white px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-[0.2em] border border-white/10">
-                                Featured Ritual
+                                <span>Featured Ritual</span>
                             </div>
                             <div className="absolute bottom-4 right-4 divine-gradient text-white px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-2 shadow-lg">
                                 <ExternalLink className="w-3.5 h-3.5" />
-                                WATCH ON YouTube
+                                <span>WATCH ON YouTube</span>
                             </div>
                         </div>
                         <div className="p-10">
@@ -75,11 +75,11 @@ export function VideoGallery({ lang, t }: { lang: Language, t: any }) {
                             <div className="flex items-center gap-6 text-[10px] font-black text-gray-400 uppercase tracking-widest border-t border-orange-100/30 pt-8">
                                 <span className="flex items-center gap-2">
                                     <Calendar className="w-4 h-4 text-orange-400" />
-                                    Visual Archives
+                                    <span>Visual Archives</span>
                                 </span>
                                 <span className="flex items-center gap-2">
                                     <MapPin className="w-4 h-4 text-orange-400" />
-                                    Pendurthi
+                                    <span>Pendurthi</span>
                                 </span>
                             </div>
                         </div>

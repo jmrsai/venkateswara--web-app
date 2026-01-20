@@ -38,7 +38,7 @@ export const INITIAL_SITE_CONFIG: SiteConfig = {
     contactPhone: '+91 99999 99999',
     contactEmail: 'helpdesk@uttarandhratirupati.org',
     address: 'UTTHARANDHRA TIRUPATI ( Venkateswara Swamy Temple ), Balaji Nagar, Pendurthi, Visakhapatnam, Pendurti, Andhra Pradesh 531173',
-    mapEmbedUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d237.41112734036318!2d83.21121301276729!3d17.811517714706405!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a39671fbc497e33%3A0xfb3d22187ebdc15!2sUTTHARANDHRA%20TIRUPATI%20(%20Venkateswara%20Swamy%20Temple%20)!5e0!3m2!1sen!2sin!4v1768306031383!5m2!1sen!2sin',
+    mapEmbedUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3798.5792542226905!2d83.2088485750837!3d17.811460590450366!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a39671fbc497e33%3A0xfb3d22187ebdc15!2sUTTHARANDHRA%20TIRUPATI%20(%20Venkateswara%20Swamy%20Temple%20)!5e0!3m2!1sen!2sin!4v1768918308742!5m2!1sen!2sin',
     whatsappChannel: 'https://whatsapp.com/channel/0029Vap96ByFnSzG0KocMq1y',
     panchangamImageUrl: '',
     historyContent: 'The Lord of the Universe and Vaikuntha, Srimannarayana, takes many forms to protect his devotees. In this Kaliyuga, he incarnated as Lord Venkateswara to offer solace to mankind...',
@@ -88,6 +88,11 @@ export const INITIAL_SITE_CONFIG: SiteConfig = {
     },
     threeDConfig: {
         stlUrl: '/tirupati.stl',
+        models: [
+            { id: 'main', name: 'Main Sannidhi', url: '/tirupati.stl' },
+            { id: 'alt', name: 'Alternate View', url: '/tirupati_alt.stl' }
+        ],
+        activeModelId: 'main',
         modelScale: 0.15,
         initialRotation: [0, 0, 0],
         ambientIntensity: 0.8,

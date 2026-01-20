@@ -36,7 +36,9 @@ import {
     Image as ImageIcon,
     Edit,
     X,
-    Settings
+    Settings,
+    Menu,
+    Box
 } from 'lucide-react'
 import { templeService, INITIAL_INSIGHTS, MOCK_INVENTORY, MOCK_BOOKINGS, INITIAL_SITE_CONFIG } from './templeService'
 import { TempleInsights, InventoryItem, FeedbackItem, SiteConfig, Seva, LibraryItem, VideoItem, NewsItem, Donation, Booking, TempleEvent, DynamicPage, Announcement } from './types'
@@ -76,6 +78,7 @@ export function AdminDashboard({ lang, t }: { lang: Language, t: any }) {
     const [selectedInventory, setSelectedInventory] = useState<Partial<InventoryItem> | null>(null)
     const [selectedEvent, setSelectedEvent] = useState<Partial<TempleEvent> | null>(null)
     const [newItem, setNewItem] = useState<any>({ type: 'audio' })
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
     useEffect(() => {
         const fetchData = async () => {
@@ -330,19 +333,19 @@ export function AdminDashboard({ lang, t }: { lang: Language, t: any }) {
     }
 
     const StatCard = ({ title, value, icon: Icon, color, trend }: { title: string, value: string | number, icon: any, color: string, trend?: string }) => (
-        <div className="bg-white p-6 rounded-[32px] shadow-sm border border-gray-100 hover:shadow-xl transition-all group">
-            <div className="flex justify-between items-start mb-4">
-                <div className={`p-4 rounded-2xl ${color}`}>
-                    <Icon className="w-6 h-6 text-white" />
+        <div className="bg-white p-4 md:p-6 rounded-[24px] md:rounded-[32px] shadow-sm border border-gray-100 hover:shadow-xl transition-all group">
+            <div className="flex justify-between items-start mb-3 md:mb-4">
+                <div className={`p-3 md:p-4 rounded-xl md:rounded-2xl ${color}`}>
+                    <Icon className="w-5 h-5 md:w-6 md:h-6 text-white" />
                 </div>
                 {trend && (
-                    <span className="flex items-center gap-1 text-green-600 text-xs font-black bg-green-50 px-2 py-1 rounded-full">
+                    <span className="flex items-center gap-1 text-green-600 text-[10px] md:text-xs font-black bg-green-50 px-2 py-1 rounded-full">
                         <TrendingUp className="w-3 h-3" /> {trend}
                     </span>
                 )}
             </div>
-            <p className="text-gray-500 text-xs font-black uppercase tracking-widest mb-1">{title}</p>
-            <h4 className="text-3xl font-black text-gray-900 group-hover:text-orange-600 transition-colors">{value}</h4>
+            <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest mb-1">{title}</p>
+            <h4 className="text-xl md:text-3xl font-black text-gray-900 group-hover:text-orange-600 transition-colors truncate">{value}</h4>
         </div>
     )
 
@@ -363,14 +366,38 @@ export function AdminDashboard({ lang, t }: { lang: Language, t: any }) {
     ]
 
     return (
-        <div className="flex bg-gray-50 min-h-screen -m-4 md:-m-12 overflow-hidden font-sans">
+        <div className="flex bg-gray-50 min-h-screen overflow-hidden font-sans relative">
+            {/* Mobile Header */}
+            <div className="md:hidden fixed top-0 left-0 right-0 bg-white border-b border-gray-100 z-40 p-4 flex justify-between items-center shadow-sm">
+                <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-orange-600 rounded-lg flex items-center justify-center shadow-lg">
+                        <ShieldCheck className="w-5 h-5 text-white" />
+                    </div>
+                    <h2 className="text-sm font-black text-gray-900 uppercase">Admin</h2>
+                </div>
+                <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="p-2 bg-gray-50 rounded-xl text-gray-600 active:scale-95 transition-all">
+                    {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                </button>
+            </div>
+
+            {/* Sidebar Overlay (Mobile) */}
+            {mobileMenuOpen && (
+                <div
+                    className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden transition-all duration-300"
+                    onClick={() => setMobileMenuOpen(false)}
+                />
+            )}
+
             {/* Sidebar */}
-            <aside className="w-20 lg:w-72 bg-white border-r border-gray-100 flex flex-col h-screen sticky top-0 transition-all duration-300 z-30">
+            <aside className={`
+                fixed md:sticky top-0 left-0 h-screen transition-all duration-300 z-50 bg-white border-r border-gray-100 flex flex-col
+                ${mobileMenuOpen ? 'translate-x-0 w-72' : '-translate-x-full md:translate-x-0 w-20 lg:w-72'}
+            `}>
                 <div className="p-6 border-b border-gray-50 flex items-center gap-3">
                     <div className="w-10 h-10 bg-orange-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-orange-100">
                         <ShieldCheck className="w-6 h-6 text-white" />
                     </div>
-                    <div className="hidden lg:block overflow-hidden whitespace-nowrap">
+                    <div className={`${mobileMenuOpen ? 'block' : 'hidden lg:block'} overflow-hidden whitespace-nowrap`}>
                         <h2 className="text-sm font-black text-gray-900 uppercase tracking-tighter">Admin Portal</h2>
                         <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Master Control</p>
                     </div>
@@ -382,13 +409,16 @@ export function AdminDashboard({ lang, t }: { lang: Language, t: any }) {
                         return (
                             <button
                                 key={item.id}
-                                onClick={() => setActiveTab(item.id as any)}
+                                onClick={() => {
+                                    setActiveTab(item.id as any);
+                                    setMobileMenuOpen(false);
+                                }}
                                 className={`w-full flex items-center gap-3 p-4 rounded-2xl transition-all group ${activeTab === item.id
                                     ? 'bg-orange-600 text-white shadow-xl shadow-orange-100 scale-[1.02]'
                                     : 'text-gray-500 hover:bg-gray-50 hover:text-orange-600'}`}
                             >
                                 <Icon className={`w-5 h-5 flex-shrink-0 transition-transform group-hover:scale-110 ${activeTab === item.id ? 'text-white' : 'text-gray-400'}`} />
-                                <span className="hidden lg:block font-black text-xs uppercase tracking-widest">{item.label}</span>
+                                <span className={`${mobileMenuOpen ? 'block' : 'hidden lg:block'} font-black text-xs uppercase tracking-widest`}>{item.label}</span>
                                 {activeTab === item.id && <div className="ml-auto w-1.5 h-1.5 bg-white rounded-full animate-pulse transition-all" />}
                             </button>
                         );
@@ -408,23 +438,23 @@ export function AdminDashboard({ lang, t }: { lang: Language, t: any }) {
             </aside>
 
             {/* Main Content Area */}
-            <main className="flex-1 overflow-y-auto p-4 md:p-12 custom-scrollbar">
-                <header className="flex justify-between items-center mb-12">
-                    <div>
+            <main className="flex-1 overflow-y-auto p-4 md:p-8 lg:p-12 pt-24 md:pt-12 custom-scrollbar transition-all">
+                <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8 md:mb-12">
+                    <div className="animate-in slide-in-from-left-4 duration-500">
                         <div className="flex items-center gap-2 mb-2">
                             <div className="w-2 h-2 bg-green-500 rounded-full animate-ping" />
                             <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Live System Active</span>
                         </div>
-                        <h1 className="text-4xl font-black text-gray-900 tracking-tighter">
+                        <h1 className="text-2xl md:text-3xl lg:text-4xl font-black text-gray-900 tracking-tighter">
                             {navigation.find(n => n.id === activeTab)?.label}
                         </h1>
                     </div>
-                    <div className="flex items-center gap-4">
-                        <div className="hidden md:flex flex-col text-right">
+                    <div className="flex items-center justify-between md:justify-end gap-4 w-full md:w-auto">
+                        <div className="flex flex-col text-left md:text-right">
                             <span className="text-[10px] font-black text-gray-400 uppercase">Local Time</span>
                             <span className="text-sm font-black text-gray-900">{new Date().toLocaleTimeString()}</span>
                         </div>
-                        <div className="w-12 h-12 bg-white border border-gray-100 rounded-2xl flex items-center justify-center shadow-sm relative">
+                        <div className="w-12 h-12 bg-white border border-gray-100 rounded-2xl flex items-center justify-center shadow-sm relative active:scale-95 transition-all">
                             <Bell className="w-6 h-6 text-gray-400" />
                             <div className="absolute top-2 right-2 w-2 h-2 bg-orange-600 rounded-full border-2 border-white" />
                         </div>
@@ -951,14 +981,14 @@ export function AdminDashboard({ lang, t }: { lang: Language, t: any }) {
                 ) : activeTab === 'settings' ? (
                     <div className="space-y-8 animate-in fade-in zoom-in-95 duration-500">
                         {/* Settings Sub-tabs */}
-                        <div className="flex flex-wrap gap-2 p-1 bg-gray-100 rounded-3xl w-fit">
-                            <button onClick={() => setSettingsSubTab('general')} className={`px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${settingsSubTab === 'general' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}>Identity</button>
-                            <button onClick={() => setSettingsSubTab('appearance')} className={`px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${settingsSubTab === 'appearance' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}>Appearance</button>
-                            <button onClick={() => setSettingsSubTab('home')} className={`px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${settingsSubTab === 'home' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}>Home Page</button>
-                            <button onClick={() => setSettingsSubTab('history')} className={`px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${settingsSubTab === 'history' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}>History Page</button>
-                            <button onClick={() => setSettingsSubTab('features')} className={`px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${settingsSubTab === 'features' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}>Features</button>
-                            <button onClick={() => setSettingsSubTab('logistics')} className={`px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${settingsSubTab === 'logistics' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}>Logistics</button>
-                            <button onClick={() => setSettingsSubTab('darshan')} className={`px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${settingsSubTab === 'darshan' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}>3D Darshan</button>
+                        <div className="flex overflow-x-auto gap-2 p-1 bg-gray-100 rounded-3xl w-full md:w-fit no-scrollbar select-none">
+                            <button onClick={() => setSettingsSubTab('general')} className={`flex-shrink-0 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${settingsSubTab === 'general' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}>Identity</button>
+                            <button onClick={() => setSettingsSubTab('appearance')} className={`flex-shrink-0 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${settingsSubTab === 'appearance' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}>Appearance</button>
+                            <button onClick={() => setSettingsSubTab('home')} className={`flex-shrink-0 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${settingsSubTab === 'home' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}>Home Page</button>
+                            <button onClick={() => setSettingsSubTab('history')} className={`flex-shrink-0 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${settingsSubTab === 'history' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}>History Page</button>
+                            <button onClick={() => setSettingsSubTab('features')} className={`flex-shrink-0 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${settingsSubTab === 'features' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}>Features</button>
+                            <button onClick={() => setSettingsSubTab('logistics')} className={`flex-shrink-0 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${settingsSubTab === 'logistics' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}>Logistics</button>
+                            <button onClick={() => setSettingsSubTab('darshan')} className={`flex-shrink-0 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${settingsSubTab === 'darshan' ? 'bg-white text-orange-600 shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}>3D Darshan</button>
                         </div>
 
                         <div className="bg-white p-10 rounded-[48px] shadow-2xl border border-gray-100">
@@ -1079,6 +1109,39 @@ export function AdminDashboard({ lang, t }: { lang: Language, t: any }) {
                                                         <input type="text" value={config.threeDConfig?.lightColor || '#ffffff'} onChange={(e) => setConfig({ ...config, threeDConfig: { ...config.threeDConfig!, lightColor: e.target.value } })} className="flex-1 bg-white border border-gray-200 rounded-xl px-4 py-2 text-sm font-bold uppercase" />
                                                     </div>
                                                 </label>
+                                            </div>
+                                        </div>
+
+                                        <div className="p-8 bg-indigo-50/30 rounded-[40px] border border-indigo-100/50">
+                                            <h4 className="text-sm font-black text-indigo-950 uppercase tracking-widest mb-6 flex items-center gap-2">
+                                                <Box className="w-4 h-4 text-indigo-600" />
+                                                Model Catalog
+                                            </h4>
+                                            <div className="space-y-4">
+                                                {config.threeDConfig?.models?.map((model) => (
+                                                    <div key={model.id} className="flex items-center gap-4 p-4 bg-white rounded-2xl border border-indigo-100">
+                                                        <div className="flex-1">
+                                                            <p className="text-xs font-black text-gray-900">{model.name}</p>
+                                                            <p className="text-[10px] font-bold text-gray-400">{model.url}</p>
+                                                        </div>
+                                                        <button
+                                                            onClick={() => setConfig({
+                                                                ...config,
+                                                                threeDConfig: {
+                                                                    ...config.threeDConfig!,
+                                                                    activeModelId: model.id,
+                                                                    stlUrl: model.url // Keep for legacy compatibility
+                                                                }
+                                                            })}
+                                                            className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${config.threeDConfig?.activeModelId === model.id ? 'bg-indigo-600 text-white shadow-lg' : 'bg-gray-100 text-gray-400 hover:bg-gray-200'}`}
+                                                        >
+                                                            {config.threeDConfig?.activeModelId === model.id ? 'Active' : 'Set Active'}
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                                <div className="pt-4 border-t border-indigo-100/50">
+                                                    <p className="text-[10px] font-bold text-indigo-600/60 uppercase tracking-widest text-center">Managed via templeService configuration</p>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -1255,11 +1318,11 @@ export function AdminDashboard({ lang, t }: { lang: Language, t: any }) {
                         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">
                             <div>
                                 <h3 className="text-3xl font-black text-gray-900 heading-divine">Service Management (CMS)</h3>
-                                <div className="flex gap-4 mt-4">
-                                    <button onClick={() => setContentSubTab('sevas')} className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${contentSubTab === 'sevas' ? 'bg-orange-600 text-white shadow-lg' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}>Sevas</button>
-                                    <button onClick={() => setContentSubTab('videos')} className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${contentSubTab === 'videos' ? 'bg-orange-600 text-white shadow-lg' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}>Videos</button>
-                                    <button onClick={() => setContentSubTab('library')} className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${contentSubTab === 'library' ? 'bg-orange-600 text-white shadow-lg' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}>Library</button>
-                                    <button onClick={() => setContentSubTab('news')} className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${contentSubTab === 'news' ? 'bg-orange-600 text-white shadow-lg' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}>News</button>
+                                <div className="flex overflow-x-auto pb-1 gap-3 md:gap-4 mt-4 no-scrollbar select-none">
+                                    <button onClick={() => setContentSubTab('sevas')} className={`flex-shrink-0 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${contentSubTab === 'sevas' ? 'bg-orange-600 text-white shadow-lg' : 'bg-gray-100 text-gray-400 hover:bg-gray-200'}`}>Sevas</button>
+                                    <button onClick={() => setContentSubTab('videos')} className={`flex-shrink-0 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${contentSubTab === 'videos' ? 'bg-orange-600 text-white shadow-lg' : 'bg-gray-100 text-gray-400 hover:bg-gray-200'}`}>Videos</button>
+                                    <button onClick={() => setContentSubTab('library')} className={`flex-shrink-0 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${contentSubTab === 'library' ? 'bg-orange-600 text-white shadow-lg' : 'bg-gray-100 text-gray-400 hover:bg-gray-200'}`}>Library</button>
+                                    <button onClick={() => setContentSubTab('news')} className={`flex-shrink-0 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${contentSubTab === 'news' ? 'bg-orange-600 text-white shadow-lg' : 'bg-gray-100 text-gray-400 hover:bg-gray-200'}`}>News</button>
                                 </div>
                             </div>
                             <button
@@ -1294,17 +1357,17 @@ export function AdminDashboard({ lang, t }: { lang: Language, t: any }) {
 
                         <div className="space-y-4">
                             {contentSubTab === 'sevas' && sevas.map((seva) => (
-                                <div key={seva.id} className="flex flex-col md:flex-row items-center gap-6 p-6 bg-gray-50 rounded-[32px] border border-transparent hover:border-orange-200 transition-all group">
+                                <div key={seva.id} className="flex flex-col md:flex-row items-center md:items-start gap-6 p-6 bg-gray-50 rounded-[32px] border border-transparent hover:border-orange-200 transition-all group text-center md:text-left">
                                     <img src={seva.imageUrl} className="w-24 h-24 rounded-2xl object-cover shadow-md" alt={seva.name} />
                                     <div className="flex-1">
-                                        <div className="flex items-center gap-3 mb-1">
+                                        <div className="flex flex-col md:flex-row items-center md:items-start gap-1 mb-1">
                                             <h4 className="text-xl font-black text-gray-900">{seva.name}</h4>
                                             <span className="px-3 py-1 bg-orange-100 text-orange-700 text-[10px] font-black uppercase rounded-full">{seva.day}</span>
                                         </div>
                                         <p className="text-gray-500 text-sm line-clamp-2 mb-2">{seva.description}</p>
                                         <p className="text-orange-600 font-black">₹{seva.price}</p>
                                     </div>
-                                    <div className="flex gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <div className="flex gap-3 md:opacity-0 group-hover:opacity-100 transition-opacity">
                                         <button className="p-3 bg-white text-gray-700 rounded-xl border border-gray-200 hover:text-orange-600 hover:border-orange-500 transition-all">
                                             <Edit className="w-5 h-5" />
                                         </button>
@@ -1316,8 +1379,8 @@ export function AdminDashboard({ lang, t }: { lang: Language, t: any }) {
                             ))}
 
                             {contentSubTab === 'library' && library.map((item) => (
-                                <div key={item.id} className="flex flex-col md:flex-row items-center gap-6 p-6 bg-gray-50 rounded-[32px] border border-transparent hover:border-orange-200 transition-all group">
-                                    <div className="w-24 h-24 rounded-2xl bg-orange-100 flex items-center justify-center shadow-inner">
+                                <div key={item.id} className="flex flex-col md:flex-row items-center md:items-start gap-6 p-6 bg-gray-50 rounded-[32px] border border-transparent hover:border-orange-200 transition-all group text-center md:text-left">
+                                    <div className="w-24 h-24 rounded-2xl bg-orange-100 flex items-center justify-center shadow-inner shrink-0">
                                         {item.type === 'audio' ? <Music className="w-10 h-10 text-orange-600" /> : <BookOpen className="w-10 h-10 text-orange-600" />}
                                     </div>
                                     <div className="flex-1">
@@ -1328,7 +1391,7 @@ export function AdminDashboard({ lang, t }: { lang: Language, t: any }) {
                                             {item.author && <span className="px-3 py-1 bg-blue-50 text-blue-600 text-[10px] font-black uppercase rounded-full">{item.author}</span>}
                                         </div>
                                     </div>
-                                    <div className="flex gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <div className="flex gap-3 md:opacity-0 group-hover:opacity-100 transition-opacity">
                                         <button className="p-3 bg-white text-gray-700 rounded-xl border border-gray-200 hover:text-orange-600 hover:border-orange-500 transition-all">
                                             <Edit className="w-5 h-5" />
                                         </button>
@@ -1340,8 +1403,8 @@ export function AdminDashboard({ lang, t }: { lang: Language, t: any }) {
                             ))}
 
                             {contentSubTab === 'videos' && videos.map((video) => (
-                                <div key={video.id} className="flex flex-col md:flex-row items-center gap-6 p-6 bg-gray-50 rounded-[32px] border border-transparent hover:border-orange-200 transition-all group">
-                                    <div className="relative w-32 aspect-video rounded-2xl overflow-hidden shadow-md">
+                                <div key={video.id} className="flex flex-col md:flex-row items-center md:items-start gap-6 p-6 bg-gray-50 rounded-[32px] border border-transparent hover:border-orange-200 transition-all group text-center md:text-left">
+                                    <div className="relative w-full md:w-32 aspect-video rounded-2xl overflow-hidden shadow-md shrink-0">
                                         <img src={video.thumbnailUrl || `https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg`} className="w-full h-full object-cover" alt={video.title} />
                                         <div className="absolute inset-0 flex items-center justify-center bg-black/20">
                                             <Video className="w-6 h-6 text-white drop-shadow-lg" />
@@ -1352,7 +1415,7 @@ export function AdminDashboard({ lang, t }: { lang: Language, t: any }) {
                                         <p className="text-gray-500 text-sm line-clamp-2 mb-2">{lang === 'te' && video.teDescription ? video.teDescription : video.description}</p>
                                         <p className="text-xs font-bold text-gray-400">ID: {video.videoId}</p>
                                     </div>
-                                    <div className="flex gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <div className="flex gap-3 md:opacity-0 group-hover:opacity-100 transition-opacity">
                                         <button className="p-3 bg-white text-gray-700 rounded-xl border border-gray-200 hover:text-orange-600 hover:border-orange-500 transition-all">
                                             <Edit className="w-5 h-5" />
                                         </button>
@@ -1441,7 +1504,7 @@ export function AdminDashboard({ lang, t }: { lang: Language, t: any }) {
                         </div>
                         <div className="space-y-4">
                             {announcements.map(ann => (
-                                <div key={ann.id} className="flex items-center gap-6 p-6 bg-gray-50 rounded-[32px] border border-transparent hover:border-orange-200 transition-all group">
+                                <div key={ann.id} className="flex flex-col md:flex-row items-center md:items-start gap-6 p-6 bg-gray-50 rounded-[32px] border border-transparent hover:border-orange-200 transition-all group text-center md:text-left">
                                     <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ${ann.priority === 'Urgent' ? 'bg-red-100 text-red-600' : ann.priority === 'High' ? 'bg-orange-100 text-orange-600' : 'bg-blue-100 text-blue-600'}`}>
                                         <Bell className="w-6 h-6" />
                                     </div>
@@ -1480,18 +1543,18 @@ export function AdminDashboard({ lang, t }: { lang: Language, t: any }) {
             {
                 showAddModal && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
-                        <div className="bg-white w-full max-w-2xl rounded-[40px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
-                            <div className="p-8 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                        <div className="bg-white w-full max-w-2xl rounded-3xl md:rounded-[40px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+                            <div className="p-6 md:p-8 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
                                 <div>
-                                    <h3 className="text-2xl font-black text-gray-900 capitalize">Add New {contentSubTab}</h3>
-                                    <p className="text-gray-500 text-sm font-bold">Divine expansion of temple content.</p>
+                                    <h3 className="text-xl md:text-2xl font-black text-gray-900 capitalize">Add New {contentSubTab}</h3>
+                                    <p className="text-gray-500 text-xs md:text-sm font-bold">Divine expansion of temple content.</p>
                                 </div>
                                 <button onClick={() => setShowAddModal(false)} className="w-10 h-10 bg-white border border-gray-100 rounded-xl flex items-center justify-center hover:bg-red-50 hover:text-red-500 transition-all shadow-sm">
                                     <Plus className="w-6 h-6 rotate-45" />
                                 </button>
                             </div>
 
-                            <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
+                            <div className="p-6 md:p-8 space-y-6 max-h-[70vh] md:max-h-[80vh] overflow-y-auto custom-scrollbar">
                                 {contentSubTab === 'sevas' ? (
                                     <>
                                         <label className="block">
@@ -1668,15 +1731,15 @@ export function AdminDashboard({ lang, t }: { lang: Language, t: any }) {
             {
                 showPageModal && selectedPage && (
                     <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-                        <div className="bg-white w-full max-w-4xl rounded-[48px] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-300">
-                            <div className="p-10 border-b border-gray-50 flex justify-between items-center">
+                        <div className="bg-white w-full max-w-4xl rounded-3xl md:rounded-[48px] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-300">
+                            <div className="p-6 md:p-10 border-b border-gray-50 flex justify-between items-center">
                                 <div>
-                                    <h3 className="text-2xl font-black text-gray-900 heading-divine">{selectedPage.id ? 'Edit Web Page' : 'Create New Web Page'}</h3>
-                                    <p className="text-gray-500 font-bold">Design and deploy site-wide content instantly.</p>
+                                    <h3 className="text-xl md:text-2xl font-black text-gray-900 heading-divine">{selectedPage.id ? 'Edit Web Page' : 'Create New Web Page'}</h3>
+                                    <p className="text-gray-500 text-xs md:text-sm font-bold">Design and deploy site-wide content instantly.</p>
                                 </div>
                                 <button onClick={() => setShowPageModal(false)} className="p-3 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-all"><X className="w-6 h-6 text-gray-400" /></button>
                             </div>
-                            <div className="p-10 space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
+                            <div className="p-6 md:p-10 space-y-6 max-h-[60vh] md:max-h-[75vh] overflow-y-auto custom-scrollbar">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <label className="block">
                                         <span className="text-xs font-black uppercase tracking-widest text-gray-400 mb-2 block">Page Title</span>
@@ -1723,15 +1786,15 @@ export function AdminDashboard({ lang, t }: { lang: Language, t: any }) {
             {
                 showAnnModal && selectedAnn && (
                     <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-                        <div className="bg-white w-full max-w-2xl rounded-[48px] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-300">
-                            <div className="p-10 border-b border-gray-50 flex justify-between items-center">
+                        <div className="bg-white w-full max-w-2xl rounded-3xl md:rounded-[48px] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-300">
+                            <div className="p-6 md:p-10 border-b border-gray-50 flex justify-between items-center">
                                 <div>
-                                    <h3 className="text-2xl font-black text-gray-900 heading-divine">{selectedAnn.id ? 'Edit Announcement' : 'New Broadcast'}</h3>
-                                    <p className="text-gray-500 font-bold">Reach every visitor instantly.</p>
+                                    <h3 className="text-xl md:text-2xl font-black text-gray-900 heading-divine">{selectedAnn.id ? 'Edit Announcement' : 'New Broadcast'}</h3>
+                                    <p className="text-gray-500 text-xs md:text-sm font-bold">Reach every visitor instantly.</p>
                                 </div>
                                 <button onClick={() => setShowAnnModal(false)} className="p-3 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-all"><X className="w-6 h-6 text-gray-400" /></button>
                             </div>
-                            <div className="p-10 space-y-6">
+                            <div className="p-6 md:p-10 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
                                 <label className="block">
                                     <span className="text-xs font-black uppercase tracking-widest text-gray-400 mb-2 block">Title</span>
                                     <input type="text" value={selectedAnn.title || ''} onChange={e => setSelectedAnn({ ...selectedAnn, title: e.target.value })} className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-5 py-4 font-bold outline-none focus:border-orange-500 transition-all" />
@@ -1780,15 +1843,15 @@ export function AdminDashboard({ lang, t }: { lang: Language, t: any }) {
             {
                 showInventoryModal && selectedInventory && (
                     <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-                        <div className="bg-white w-full max-w-2xl rounded-[48px] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-300">
-                            <div className="p-10 border-b border-gray-50 flex justify-between items-center">
+                        <div className="bg-white w-full max-w-2xl rounded-3xl md:rounded-[48px] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-300">
+                            <div className="p-6 md:p-10 border-b border-gray-50 flex justify-between items-center">
                                 <div>
-                                    <h3 className="text-2xl font-black text-gray-900 heading-divine">{selectedInventory.id ? 'Edit Inventory' : 'Add Item'}</h3>
-                                    <p className="text-gray-500 font-bold">Manage temple assets and stock levels.</p>
+                                    <h3 className="text-xl md:text-2xl font-black text-gray-900 heading-divine">{selectedInventory.id ? 'Edit Inventory' : 'Add Item'}</h3>
+                                    <p className="text-gray-500 text-xs md:text-sm font-bold">Manage temple assets and stock levels.</p>
                                 </div>
                                 <button onClick={() => setShowInventoryModal(false)} className="p-3 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-all"><X className="w-6 h-6 text-gray-400" /></button>
                             </div>
-                            <div className="p-10 space-y-6">
+                            <div className="p-6 md:p-10 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
                                 <label className="block">
                                     <span className="text-xs font-black uppercase tracking-widest text-gray-400 mb-2 block">Item Name</span>
                                     <input type="text" value={selectedInventory.name || ''} onChange={e => setSelectedInventory({ ...selectedInventory, name: e.target.value })} className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-5 py-4 font-bold outline-none focus:border-orange-500 transition-all" />
@@ -1838,15 +1901,15 @@ export function AdminDashboard({ lang, t }: { lang: Language, t: any }) {
             {
                 showEventModal && selectedEvent && (
                     <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-                        <div className="bg-white w-full max-w-3xl rounded-[48px] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-300">
-                            <div className="p-10 border-b border-gray-50 flex justify-between items-center">
+                        <div className="bg-white w-full max-w-3xl rounded-3xl md:rounded-[48px] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-300">
+                            <div className="p-6 md:p-10 border-b border-gray-50 flex justify-between items-center">
                                 <div>
-                                    <h3 className="text-2xl font-black text-gray-900 heading-divine">{selectedEvent.id ? 'Edit Event' : 'Schedule Event'}</h3>
-                                    <p className="text-gray-500 font-bold">Coordinate upcoming temple festivals and celebrations.</p>
+                                    <h3 className="text-xl md:text-2xl font-black text-gray-900 heading-divine">{selectedEvent.id ? 'Edit Event' : 'Schedule Event'}</h3>
+                                    <p className="text-gray-500 text-xs md:text-sm font-bold">Coordinate upcoming temple festivals and celebrations.</p>
                                 </div>
                                 <button onClick={() => setShowEventModal(false)} className="p-3 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-all"><X className="w-6 h-6 text-gray-400" /></button>
                             </div>
-                            <div className="p-10 space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
+                            <div className="p-6 md:p-10 space-y-6 max-h-[65vh] md:max-h-[80vh] overflow-y-auto custom-scrollbar">
                                 <label className="block">
                                     <span className="text-xs font-black uppercase tracking-widest text-gray-400 mb-2 block">Event Title</span>
                                     <input type="text" value={selectedEvent.title || ''} onChange={e => setSelectedEvent({ ...selectedEvent, title: e.target.value })} className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-5 py-4 font-bold outline-none focus:border-orange-500 transition-all" />

@@ -21,7 +21,7 @@ export function DigitalLibrary({ lang, t }: { lang: Language, t: any }) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
                 <Loader2 className="w-12 h-12 text-orange-600 animate-spin" />
-                <p className="text-gray-500 font-bold italic">Opening Sacred Archives...</p>
+                <p className="text-gray-500 font-bold italic"><span>Opening Sacred Archives...</span></p>
             </div>
         );
     }
@@ -53,7 +53,7 @@ export function DigitalLibrary({ lang, t }: { lang: Language, t: any }) {
                                 {lang === 'te' && book.teTitle ? book.teTitle : book.title}
                             </h3>
                             <p className="text-sm font-bold text-gray-500 mb-8 uppercase tracking-widest opacity-60">
-                                {lang === 'te' && book.teAuthor ? book.teAuthor : (book.author || 'Temple Archive')} {book.duration ? `• ${book.duration}` : ''}
+                                <span>{lang === 'te' && book.teAuthor ? book.teAuthor : (book.author || 'Temple Archive')} {book.duration ? `• ${book.duration}` : ''}</span>
                             </p>
 
                             <a
@@ -76,13 +76,15 @@ export function DigitalLibrary({ lang, t }: { lang: Language, t: any }) {
                     <span className="text-orange-500 font-black uppercase tracking-[0.3em] text-xs mb-4 block">Legacy & Heritage</span>
                     <h3 className="text-4xl font-black mb-6 heading-divine">{t.historyOfTemple}</h3>
                     <p className="text-gray-400 text-lg leading-relaxed mb-10 font-serif italic">
-                        {lang === 'te'
-                            ? 'పెందుర్తిలోని శ్రీ వేంకటేశ్వర స్వామి ఆలయానికి శతాబ్దాల చరిత్ర ఉంది. ఈ ఆలయం ఆధ్యాత్మిక కేంద్రంగానే కాకుండా సాంస్కృతిక వారసత్వానికి చిహ్నంగా నిలిచింది.'
-                            : 'The Lord Venkateswara temple in Pendurthi has a history spanning centuries. It stands not just as a spiritual hub but as a symbol of cultural heritage, radiating divine light to thousands of devotees.'
-                        }
+                        <span>
+                            {lang === 'te'
+                                ? 'పెందుర్తిలోని శ్రీ వేంకటేశ్వర స్వామి ఆలయానికి శతాబ్దాల చరిత్ర ఉంది. ఈ ఆలయం ఆధ్యాత్మిక కేంద్రంగానే కాకుండా సాంస్కృతిక వారసత్వానికి చిహ్నంగా నిలిచింది.'
+                                : 'The Lord Venkateswara temple in Pendurthi has a history spanning centuries. It stands not just as a spiritual hub but as a symbol of cultural heritage, radiating divine light to thousands of devotees.'
+                            }
+                        </span>
                     </p>
                     <button className="px-10 py-5 divine-gradient text-white font-black rounded-2xl hover:shadow-2xl hover:shadow-orange-600/40 transition-all shadow-xl active:scale-95 text-sm uppercase tracking-widest">
-                        {lang === 'te' ? 'పూర్తి చరిత్ర చదవండి' : 'Read Full History'}
+                        <span>{lang === 'te' ? 'పూర్తి చరిత్ర చదవండి' : 'Read Full History'}</span>
                     </button>
                 </div>
                 <Book className="absolute bottom-[-60px] right-[-60px] w-96 h-96 text-white/5 -rotate-12 group-hover:rotate-0 transition-transform duration-1000" />

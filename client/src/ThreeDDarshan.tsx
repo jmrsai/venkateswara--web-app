@@ -199,6 +199,35 @@ function Model({ url }: { url: string }) {
     )
 }
 
+// Custom Error Boundary for 3D Canvas
+class ThreeErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
+    constructor(props: { children: React.ReactNode }) {
+        super(props)
+        this.state = { hasError: false }
+    }
+    static getDerivedStateFromError() { return { hasError: true } }
+    render() {
+        if (this.state.hasError) {
+            return (
+                <div className="w-full h-full flex items-center justify-center bg-gray-900/50 rounded-[48px] border-2 border-orange-500/20">
+                    <div className="text-center px-6">
+                        <Box className="w-12 h-12 text-orange-500 mx-auto mb-4 opacity-50" />
+                        <h4 className="text-orange-500 font-black uppercase tracking-widest text-sm mb-2">Darshan Unavailable</h4>
+                        <p className="text-gray-400 text-xs">The 3D model could not be rendered at this moment.</p>
+                        <button
+                            onClick={() => window.location.reload()}
+                            className="mt-6 px-6 py-2 bg-orange-600/20 text-orange-500 border border-orange-500/30 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-orange-600 hover:text-white transition-all"
+                        >
+                            Retry Render
+                        </button>
+                    </div>
+                </div>
+            )
+        }
+        return this.props.children
+    }
+}
+
 interface Props {
     config: SiteConfig
 }
@@ -211,7 +240,12 @@ export default function ThreeDDarshan({ config }: Props) {
 
     // Dynamic configuration with defaults
     const threeD = config.threeDConfig || {
-        stlUrl: config.stlUrl || '/tirupati.stl',
+        stlUrl: '/tirupati.stl',
+        models: [
+            { id: 'main', name: 'Main Sannidhi', url: '/tirupati.stl' },
+            { id: 'alt', name: 'Alternate View', url: '/tirupati_alt.stl' }
+        ],
+        activeModelId: 'main',
         modelScale: 0.15,
         initialRotation: [0, 0, 0],
         ambientIntensity: 0.8,
@@ -220,7 +254,9 @@ export default function ThreeDDarshan({ config }: Props) {
         lightColor: '#ffffff'
     }
 
-    const stlUrl = threeD.stlUrl
+    const [activeModelId, setActiveModelId] = useState(threeD.activeModelId || 'main')
+    const currentModel = threeD.models?.find(m => m.id === activeModelId) || { url: threeD.stlUrl }
+    const stlUrl = currentModel.url || '/tirupati.stl'
 
     const cameraSettings = {
         face: { pos: [0, 5, 12], target: [0, 5, 0] },
@@ -229,127 +265,137 @@ export default function ThreeDDarshan({ config }: Props) {
     }
 
     return (
-        <div className="w-full h-[700px] md:h-[850px] rounded-[48px] overflow-hidden relative glass-morphism border border-white/20 shadow-2xl bg-[#020205]">
-            {/* Header Overlay */}
-            <div className="absolute top-10 left-10 z-20 pointer-events-none flex items-center gap-6">
-                <div className="w-16 h-16 bg-white/10 backdrop-blur-3xl rounded-3xl border border-white/20 flex items-center justify-center shadow-2xl">
-                    <Sparkle className="w-8 h-8 text-orange-400 animate-pulse" />
-                </div>
-                <div>
-                    <h3 className="text-3xl font-black text-white heading-divine leading-none tracking-tight mb-2 flex items-center gap-3">
-                        Divine <span className="text-orange-500">3D Darshan</span>
-                    </h3>
-                    <div className="flex items-center gap-3">
-                        <span className="px-3 py-1 bg-orange-500/20 rounded-full border border-orange-500/30 text-[9px] font-black uppercase tracking-[0.3em] text-orange-400">
-                            Sacred Experience
-                        </span>
-                        <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                        <span className="text-[9px] font-black text-white/40 uppercase tracking-widest">Live Presence</span>
+        <ThreeErrorBoundary>
+            <div className="w-full h-[700px] md:h-[850px] rounded-[48px] overflow-hidden relative glass-morphism border border-white/20 shadow-2xl bg-[#020205]">
+                {/* Header Overlay */}
+                <div className="absolute top-10 left-10 z-20 pointer-events-none flex items-center gap-6">
+                    <div className="w-16 h-16 bg-white/10 backdrop-blur-3xl rounded-3xl border border-white/20 flex items-center justify-center shadow-2xl">
+                        <Sparkle className="w-8 h-8 text-orange-400 animate-pulse" />
+                    </div>
+                    <div className="pointer-events-auto">
+                        <h3 className="text-3xl font-black text-white heading-divine leading-none tracking-tight mb-2 flex items-center gap-3">
+                            <span>Divine</span> <span className="text-orange-500"><span>3D Darshan</span></span>
+                        </h3>
+                        <div className="flex items-center gap-3">
+                            {threeD.models && threeD.models.length > 1 && (
+                                <select 
+                                    value={activeModelId}
+                                    onChange={(e) => setActiveModelId(e.target.value)}
+                                    className="bg-black/60 text-orange-400 text-[10px] font-black uppercase tracking-widest border border-orange-500/30 rounded-full px-3 py-1 outline-none hover:bg-orange-500 hover:text-white transition-all cursor-pointer"
+                                >
+                                    {threeD.models.map(m => (
+                                        <option key={m.id} value={m.id}>{m.name}</option>
+                                    ))}
+                                </select>
+                            )}
+                            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                            <span className="text-[9px] font-black text-white/40 uppercase tracking-widest"><span>Live Presence</span></span>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            {/* View Controls */}
-            <div className="absolute right-10 top-1/2 -translate-y-1/2 z-20 flex flex-col gap-5 p-4 bg-black/40 backdrop-blur-3xl border border-white/10 rounded-[32px] shadow-2xl">
-                {(['face', 'feet', 'full'] as const).map((v) => (
+                {/* View Controls */}
+                <div className="absolute right-10 top-1/2 -translate-y-1/2 z-20 flex flex-col gap-5 p-4 bg-black/40 backdrop-blur-3xl border border-white/10 rounded-[32px] shadow-2xl">
+                    {(['face', 'feet', 'full'] as const).map((v) => (
+                        <button
+                            key={v}
+                            onClick={() => { setViewPreset(v); setAutoRotate(false); }}
+                            className={`w-14 h-14 rounded-2xl flex flex-col items-center justify-center transition-all group ${viewPreset === v ? 'bg-orange-500 text-white shadow-[0_0_30px_rgba(249,115,22,0.4)] scale-110' : 'bg-white/5 text-orange-200 hover:bg-white/10'}`}
+                        >
+                            {v === 'face' && <Eye className="w-6 h-6" />}
+                            {v === 'feet' && <Target className="w-6 h-6" />}
+                            {v === 'full' && <Maximize className="w-6 h-6" />}
+                            <span className="text-[7px] font-black uppercase mt-1 opacity-0 group-hover:opacity-100 transition-opacity"><span>{v}</span></span>
+                        </button>
+                    ))}
+                </div>
+
+                {/* Action Buttons */}
+                <div className="absolute bottom-12 left-1/2 -translate-x-1/2 z-20 flex gap-12 items-center px-10 py-6 bg-black/40 backdrop-blur-3xl border border-white/10 rounded-[40px] shadow-2xl">
                     <button
-                        key={v}
-                        onClick={() => { setViewPreset(v); setAutoRotate(false); }}
-                        className={`w-14 h-14 rounded-2xl flex flex-col items-center justify-center transition-all group ${viewPreset === v ? 'bg-orange-500 text-white shadow-[0_0_30px_rgba(249,115,22,0.4)] scale-110' : 'bg-white/5 text-orange-200 hover:bg-white/10'}`}
+                        onClick={() => { setIsArathi(true); setAutoRotate(false); setTimeout(() => setIsArathi(false), 8000); }}
+                        disabled={isArathi}
+                        className="group flex flex-col items-center gap-3"
                     >
-                        {v === 'face' && <Eye className="w-6 h-6" />}
-                        {v === 'feet' && <Target className="w-6 h-6" />}
-                        {v === 'full' && <Maximize className="w-6 h-6" />}
-                        <span className="text-[7px] font-black uppercase mt-1 opacity-0 group-hover:opacity-100 transition-opacity">{v}</span>
+                        <div className={`w-20 h-20 rounded-full flex items-center justify-center border-2 transition-all duration-700 ${isArathi ? 'bg-orange-600 border-orange-400 shadow-[0_0_50px_rgba(234,88,12,0.8)]' : 'bg-black/60 border-orange-900/50 hover:border-orange-500 hover:scale-110'}`}>
+                            <Flame className={`w-10 h-10 ${isArathi ? 'text-white animate-pulse' : 'text-orange-500'}`} />
+                        </div>
+                        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-orange-200/60 group-hover:text-orange-400 transition-colors"><span>Harathi</span></span>
                     </button>
-                ))}
-            </div>
 
-            {/* Action Buttons */}
-            <div className="absolute bottom-12 left-1/2 -translate-x-1/2 z-20 flex gap-12 items-center px-10 py-6 bg-black/40 backdrop-blur-3xl border border-white/10 rounded-[40px] shadow-2xl">
-                <button
-                    onClick={() => { setIsArathi(true); setAutoRotate(false); setTimeout(() => setIsArathi(false), 8000); }}
-                    disabled={isArathi}
-                    className="group flex flex-col items-center gap-3"
-                >
-                    <div className={`w-20 h-20 rounded-full flex items-center justify-center border-2 transition-all duration-700 ${isArathi ? 'bg-orange-600 border-orange-400 shadow-[0_0_50px_rgba(234,88,12,0.8)]' : 'bg-black/60 border-orange-900/50 hover:border-orange-500 hover:scale-110'}`}>
-                        <Flame className={`w-10 h-10 ${isArathi ? 'text-white animate-pulse' : 'text-orange-500'}`} />
+                    <div className="h-10 w-px bg-white/10" />
+
+                    <button
+                        onClick={() => setAutoRotate(!autoRotate)}
+                        className="flex flex-col items-center gap-3 group"
+                    >
+                        <div className={`w-16 h-16 rounded-full flex items-center justify-center border-2 transition-all ${autoRotate ? 'bg-indigo-600/30 border-indigo-500/50 text-indigo-400 shadow-[0_0_30px_rgba(99,102,241,0.3)]' : 'bg-black/60 border-gray-800 text-gray-500'}`}>
+                            <RotateCcw className={`w-8 h-8 ${autoRotate ? 'animate-spin-slow' : ''}`} />
+                        </div>
+                        <span className="text-[9px] font-black uppercase tracking-widest text-white/30 group-hover:text-white/60"><span>Auto Rotation</span></span>
+                    </button>
+
+                    <div className="h-10 w-px bg-white/10" />
+
+                    <button
+                        onClick={() => { setIsPushpanjali(true); setTimeout(() => setIsPushpanjali(false), 6000); }}
+                        disabled={isPushpanjali}
+                        className="group flex flex-col items-center gap-3"
+                    >
+                        <div className={`w-20 h-20 rounded-full flex items-center justify-center border-2 transition-all duration-700 ${isPushpanjali ? 'bg-rose-600 border-rose-400 shadow-[0_0_50px_rgba(225,29,72,0.8)]' : 'bg-black/60 border-rose-900/50 hover:border-rose-500 hover:scale-110'}`}>
+                            <Heart className={`w-10 h-10 ${isPushpanjali ? 'text-white animate-bounce' : 'text-rose-500'}`} />
+                        </div>
+                        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-rose-200/60 group-hover:text-rose-400 transition-colors"><span>Pushpanjali</span></span>
+                    </button>
+                </div>
+
+                <Canvas shadows gl={{ antialias: true, alpha: true }} dpr={[1, 2]}>
+                    <Suspense fallback={null}>
+                        <Stars radius={200} depth={60} count={6000} factor={6} saturation={0.5} fade speed={2} />
+                        <Sparkles count={150} scale={30} size={2} speed={0.4} color="#4f46e5" opacity={0.2} />
+
+                        <ambientLight intensity={threeD.ambientIntensity} />
+                        <pointLight position={[10, 15, 10]} intensity={threeD.pointIntensity} color={threeD.lightColor} castShadow />
+                        <spotLight position={[-15, 25, 15]} angle={0.25} penumbra={1} intensity={threeD.spotIntensity} color={threeD.lightColor} castShadow />
+
+                        <Float speed={2.5} rotationIntensity={0.3} floatIntensity={0.6}>
+                            <group scale={threeD.modelScale} rotation={threeD.initialRotation as [number, number, number]}>
+                                <Model url={stlUrl} />
+                            </group>
+                        </Float>
+
+                        <DivineAura />
+                        <DeepHarathi active={isArathi} />
+                        <FlowerRain active={isPushpanjali} />
+
+                        <Environment preset="night" />
+
+                        <OrbitControls
+                            enablePan={false}
+                            autoRotate={autoRotate}
+                            autoRotateSpeed={1.0}
+                            minDistance={8}
+                            maxDistance={35}
+                            target={cameraSettings[viewPreset].target as [number, number, number]}
+                            makeDefault
+                        />
+                        <PerspectiveCamera
+                            makeDefault
+                            fov={40}
+                            position={cameraSettings[viewPreset].pos as [number, number, number]}
+                        />
+                        <ContactShadows resolution={1024} scale={20} blur={2} opacity={0.4} far={10} color="#000000" />
+                    </Suspense>
+                </Canvas>
+
+                {/* Interaction Tip */}
+                <div className="absolute top-10 right-32 z-20">
+                    <div className="flex items-center gap-3 bg-white/5 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10">
+                        <Info className="w-4 h-4 text-orange-400" />
+                        <span className="text-[10px] font-black text-white/50 uppercase tracking-widest leading-none"><span>Drag to Orbit • Scroll to Zoom</span></span>
                     </div>
-                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-orange-200/60 group-hover:text-orange-400 transition-colors">Harathi</span>
-                </button>
-
-                <div className="h-10 w-px bg-white/10" />
-
-                <button
-                    onClick={() => setAutoRotate(!autoRotate)}
-                    className="flex flex-col items-center gap-3 group"
-                >
-                    <div className={`w-16 h-16 rounded-full flex items-center justify-center border-2 transition-all ${autoRotate ? 'bg-indigo-600/30 border-indigo-500/50 text-indigo-400 shadow-[0_0_30px_rgba(99,102,241,0.3)]' : 'bg-black/60 border-gray-800 text-gray-500'}`}>
-                        <RotateCcw className={`w-8 h-8 ${autoRotate ? 'animate-spin-slow' : ''}`} />
-                    </div>
-                    <span className="text-[9px] font-black uppercase tracking-widest text-white/30 group-hover:text-white/60">Auto Rotation</span>
-                </button>
-
-                <div className="h-10 w-px bg-white/10" />
-
-                <button
-                    onClick={() => { setIsPushpanjali(true); setTimeout(() => setIsPushpanjali(false), 6000); }}
-                    disabled={isPushpanjali}
-                    className="group flex flex-col items-center gap-3"
-                >
-                    <div className={`w-20 h-20 rounded-full flex items-center justify-center border-2 transition-all duration-700 ${isPushpanjali ? 'bg-rose-600 border-rose-400 shadow-[0_0_50px_rgba(225,29,72,0.8)]' : 'bg-black/60 border-rose-900/50 hover:border-rose-500 hover:scale-110'}`}>
-                        <Heart className={`w-10 h-10 ${isPushpanjali ? 'text-white animate-bounce' : 'text-rose-500'}`} />
-                    </div>
-                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-rose-200/60 group-hover:text-rose-400 transition-colors">Pushpanjali</span>
-                </button>
-            </div>
-
-            <Canvas shadows gl={{ antialias: true, alpha: true }} dpr={[1, 2]}>
-                <Suspense fallback={null}>
-                    <Stars radius={200} depth={60} count={6000} factor={6} saturation={0.5} fade speed={2} />
-                    <Sparkles count={150} scale={30} size={2} speed={0.4} color="#4f46e5" opacity={0.2} />
-
-                    <ambientLight intensity={threeD.ambientIntensity} />
-                    <pointLight position={[10, 15, 10]} intensity={threeD.pointIntensity} color={threeD.lightColor} castShadow />
-                    <spotLight position={[-15, 25, 15]} angle={0.25} penumbra={1} intensity={threeD.spotIntensity} color={threeD.lightColor} castShadow />
-
-                    <Float speed={2.5} rotationIntensity={0.3} floatIntensity={0.6}>
-                        <group scale={threeD.modelScale} rotation={threeD.initialRotation}>
-                            <Model url={stlUrl} />
-                        </group>
-                    </Float>
-
-                    <DivineAura />
-                    <DeepHarathi active={isArathi} />
-                    <FlowerRain active={isPushpanjali} />
-
-                    <Environment preset="night" />
-
-                    <OrbitControls
-                        enablePan={false}
-                        autoRotate={autoRotate}
-                        autoRotateSpeed={1.0}
-                        minDistance={8}
-                        maxDistance={35}
-                        target={cameraSettings[viewPreset].target as [number, number, number]}
-                        makeDefault
-                    />
-                    <PerspectiveCamera
-                        makeDefault
-                        fov={40}
-                        position={cameraSettings[viewPreset].pos as [number, number, number]}
-                    />
-                    <ContactShadows resolution={1024} scale={20} blur={2} opacity={0.4} far={10} color="#000000" />
-                </Suspense>
-            </Canvas>
-
-            {/* Interaction Tip */}
-            <div className="absolute top-10 right-32 z-20">
-                <div className="flex items-center gap-3 bg-white/5 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10">
-                    <Info className="w-4 h-4 text-orange-400" />
-                    <span className="text-[10px] font-black text-white/50 uppercase tracking-widest leading-none">Drag to Orbit • Scroll to Zoom</span>
                 </div>
             </div>
-        </div>
+        </ThreeErrorBoundary>
     )
 }

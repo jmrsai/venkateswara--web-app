@@ -62,7 +62,7 @@ export function Panchangam({ lang, t }: PanchangamProps) {
                         <Sun className="w-5 h-5 text-orange-500" />
                         {t.sunrise}
                     </div>
-                    <span className="font-black text-gray-900 text-base">{data.sunrise} AM</span>
+                    <span className="font-black text-gray-900 text-base"><span>{data.sunrise} AM</span></span>
                 </div>
                 <div className="h-px bg-orange-100/50 w-full" />
                 <div className="flex items-center justify-between text-sm">
@@ -70,28 +70,28 @@ export function Panchangam({ lang, t }: PanchangamProps) {
                         <Moon className="w-5 h-5 text-blue-500" />
                         {t.sunset}
                     </div>
-                    <span className="font-black text-gray-900 text-base">{data.sunset} PM</span>
+                    <span className="font-black text-gray-900 text-base"><span>{data.sunset} PM</span></span>
                 </div>
             </div>
 
             <div className="grid grid-cols-1 gap-4">
                 <div className="p-5 bg-red-50/50 rounded-3xl border border-red-100/30 flex justify-between items-center group hover:bg-red-50 transition-colors">
                     <div className="flex flex-col">
-                        <span className="text-[10px] font-black text-red-600 uppercase tracking-widest mb-1">{t.rahuKalam} 🔥</span>
-                        <span className="text-gray-400 text-[8px] font-bold uppercase">Avoid auspicious work</span>
+                        <span className="text-[10px] font-black text-red-600 uppercase tracking-widest mb-1"><span>{t.rahuKalam} 🔥</span></span>
+                        <span className="text-gray-400 text-[8px] font-bold uppercase"><span>Avoid auspicious work</span></span>
                     </div>
-                    <span className="text-base font-black text-red-900">{data.rahu}</span>
+                    <span className="text-base font-black text-red-900"><span>{data.rahu}</span></span>
                 </div>
 
                 <div className="p-5 bg-indigo-50/50 rounded-3xl border border-indigo-100/30 flex justify-between items-center group hover:bg-indigo-50 transition-colors">
                     <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">{t.yamagandam}</span>
-                    <span className="text-base font-black text-indigo-900">{data.yamagandam}</span>
+                    <span className="text-base font-black text-indigo-900"><span>{data.yamagandam}</span></span>
                 </div>
             </div>
 
             <div className="flex items-center gap-3 text-[10px] font-black text-gray-400 px-2 uppercase tracking-widest opacity-60">
                 <MapPin className="w-4 h-4 text-orange-500" />
-                Pendurthi Sanctuary
+                <span>Pendurthi Sanctuary</span>
             </div>
         </div>
     );

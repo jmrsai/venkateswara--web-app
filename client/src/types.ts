@@ -38,8 +38,16 @@ export interface SocialLinks {
     facebook?: string;
 }
 
+export interface ThreeDModel {
+    id: string;
+    name: string;
+    url: string;
+}
+
 export interface ThreeDConfig {
     stlUrl: string;
+    models?: ThreeDModel[];
+    activeModelId?: string;
     modelScale: number;
     initialRotation: [number, number, number];
     ambientIntensity: number;

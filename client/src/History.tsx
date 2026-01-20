@@ -30,15 +30,17 @@ export function HistoryPage({ lang, t, config }: { lang: Language, t: any, confi
                                 {lang === 'te' ? `${config.templeName} పురాణం` : `The Legend of ${config.templeName}`}
                             </h2>
                             <div className="prose prose-lg text-stone-700 whitespace-pre-wrap leading-loose">
-                                {config.historyContent || 'History content is being updated...'}
+                                <span>{config.historyContent || 'History content is being updated...'}</span>
                             </div>
                             <div className="bg-amber-100/50 border-l-4 border-amber-600 p-8 italic text-stone-800 my-8 shadow-inner rounded-r-[24px]">
                                 <p className="mb-3 font-bold text-amber-900 uppercase tracking-widest text-sm">Sthala Purana:</p>
                                 <p className="text-lg">
-                                    {lang === 'te'
-                                        ? 'పెందుర్తి కొండలపై శతాబ్దాలుగా ఋషులు తపస్సు చేసిన పుణ్యస్థలంగా స్థానిక పురాణాలు చెబుతున్నాయి, ఇది ఒక శక్తివంతమైన క్షేత్రం.'
-                                        : 'Local legends state that the hills of Pendurthi have been a site of penance for sages for centuries, making it a powerful Kshetram.'
-                                    }
+                                    <span>
+                                        {lang === 'te'
+                                            ? 'పెందుర్తి కొండలపై శతాబ్దాలుగా ఋషులు తపస్సు చేసిన పుణ్యస్థలంగా స్థానిక పురాణాలు చెబుతున్నాయి, ఇది ఒక శక్తివంతమైన క్షేత్రం.'
+                                            : 'Local legends state that the hills of Pendurthi have been a site of penance for sages for centuries, making it a powerful Kshetram.'
+                                        }
+                                    </span>
                                 </p>
                             </div>
                         </section>
@@ -58,14 +60,14 @@ export function HistoryPage({ lang, t, config }: { lang: Language, t: any, confi
                                     </thead>
                                     <tbody className="divide-y divide-stone-100 bg-white font-sans text-sm font-medium">
                                         <tr className="hover:bg-orange-50/30 transition-colors">
-                                            <td className="p-6 font-black text-amber-800">Foundation Stone</td>
-                                            <td className="p-6">1995</td>
-                                            <td className="p-6">Laid by H.H. Sri Chinna Jeeyar Swamy.</td>
+                                            <td className="p-6 font-black text-amber-800"><span>Foundation Stone</span></td>
+                                            <td className="p-6"><span>1995</span></td>
+                                            <td className="p-6"><span>Laid by H.H. Sri Chinna Jeeyar Swamy.</span></td>
                                         </tr>
                                         <tr className="hover:bg-orange-50/30 transition-colors">
-                                            <td className="p-6 font-black text-amber-800">Consecration</td>
-                                            <td className="p-6">May 17, 1997</td>
-                                            <td className="p-6">Formal idol installation (Pratishta) and sanctification according to Vaikhanasa Agama.</td>
+                                            <td className="p-6 font-black text-amber-800"><span>Consecration</span></td>
+                                            <td className="p-6"><span>May 17, 1997</span></td>
+                                            <td className="p-6"><span>Formal idol installation (Pratishta) and sanctification according to Vaikhanasa Agama.</span></td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -97,16 +99,16 @@ export function HistoryPage({ lang, t, config }: { lang: Language, t: any, confi
                                 <h4 className="font-black text-amber-800 uppercase text-[10px] mb-4 tracking-[0.2em]">{lang === 'te' ? 'ఆలయానికి ఎలా చేరుకోవాలి' : 'How to Reach'}</h4>
                                 <div className="space-y-4 text-sm">
                                     <div className="bg-stone-50 p-4 rounded-2xl border border-stone-100">
-                                        <strong className="block text-stone-900 mb-1 flex items-center gap-2"><Map className="w-4 h-4 text-amber-600" /> Address:</strong>
-                                        <p className="text-stone-600 font-medium leading-relaxed">{config.address}</p>
+                                        <strong className="block text-stone-900 mb-1 flex items-center gap-2"><Map className="w-4 h-4 text-amber-600" /> <span>Address:</span></strong>
+                                        <p className="text-stone-600 font-medium leading-relaxed"><span>{config.address}</span></p>
                                     </div>
                                     <div className="bg-stone-50 p-4 rounded-2xl border border-stone-100">
-                                        <strong className="block text-stone-900 mb-1">Road:</strong>
-                                        <p className="text-stone-600 font-medium whitespace-pre-line">Well connected from Vizag (20km).</p>
+                                        <strong className="block text-stone-900 mb-1"><span>Road:</span></strong>
+                                        <p className="text-stone-600 font-medium whitespace-pre-line"><span>Well connected from Vizag (20km).</span></p>
                                     </div>
                                     <div className="bg-stone-50 p-4 rounded-2xl border border-stone-100">
-                                        <strong className="block text-stone-900 mb-1">Train:</strong>
-                                        <p className="text-stone-600 font-medium">Visakhapatnam Junction or Pendurthi Station.</p>
+                                        <strong className="block text-stone-900 mb-1"><span>Train:</span></strong>
+                                        <p className="text-stone-600 font-medium"><span>Visakhapatnam Junction or Pendurthi Station.</span></p>
                                     </div>
                                 </div>
                             </div>
@@ -136,10 +138,8 @@ export function HistoryPage({ lang, t, config }: { lang: Language, t: any, confi
                         {/* Map Embed */}
                         <div className="w-full md:w-1/2 h-80 bg-stone-900 rounded-[32px] overflow-hidden shadow-2xl border-4 border-white/10 group-hover:border-orange-500/30 transition-all duration-500">
                             <iframe
-                                src={config.mapEmbedUrl || 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d237.41112734036318!2d83.21121301276729!3d17.811517714706405!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a39671fbc497e33%3A0xfb3d22187ebdc15!2sUTTHARANDHRA%20TIRUPATI%20(%20Venkateswara%20Swamy%20Temple%20)!5e0!3m2!1sen!2sin!4v1768306031383!5m2!1sen!2sin'}
-                                width="100%"
-                                height="100%"
-                                style={{ border: 0 }}
+                                src={config.mapEmbedUrl || 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3798.5792542226905!2d83.2088485750837!3d17.811460590450366!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a39671fbc497e33%3A0xfb3d22187ebdc15!2sUTTHARANDHRA%20TIRUPATI%20(%20Venkateswara%20Swamy%20Temple%20)!5e0!3m2!1sen!2sin!4v1768918308742!5m2!1sen!2sin'}
+                                style={{ border: 0, width: '100%', height: '100%' }}
                                 allowFullScreen
                                 loading="lazy"
                                 referrerPolicy="no-referrer-when-downgrade"

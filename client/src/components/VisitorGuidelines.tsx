@@ -29,10 +29,10 @@ export const VisitorGuidelines: React.FC<{ lang: 'en' | 'te' }> = ({ lang }) => 
                 </div>
                 <div>
                     <h3 className="text-2xl font-black text-gray-900 heading-divine">
-                        {lang === 'te' ? 'నిబంధనలు & సూచనలు' : 'Know Before You Go'}
+                        <span>{lang === 'te' ? 'నిబంధనలు & సూచనలు' : 'Know Before You Go'}</span>
                     </h3>
                     <p className="text-orange-600/60 text-[10px] font-black uppercase tracking-[0.2em] mt-1">
-                        {lang === 'te' ? 'ఆలయ మార్గదర్శకాలు' : 'Visitor Guidelines'}
+                        <span>{lang === 'te' ? 'ఆలయ మార్గదర్శకాలు' : 'Visitor Guidelines'}</span>
                     </p>
                 </div>
             </div>
@@ -47,7 +47,7 @@ export const VisitorGuidelines: React.FC<{ lang: 'en' | 'te' }> = ({ lang }) => 
                             <item.icon className="w-6 h-6" />
                         </div>
                         <p className="text-[10px] font-black uppercase tracking-widest text-gray-700 leading-tight">
-                            {lang === 'te' ? item.teLabel : item.label}
+                            <span>{lang === 'te' ? item.teLabel : item.label}</span>
                         </p>
                     </div>
                 ))}
@@ -56,9 +56,11 @@ export const VisitorGuidelines: React.FC<{ lang: 'en' | 'te' }> = ({ lang }) => 
             <div className="mt-10 p-4 bg-orange-50/50 rounded-2xl border border-orange-100/30 flex items-start gap-3">
                 <Info className="w-5 h-5 text-orange-600 shrink-0 mt-0.5" />
                 <p className="text-xs text-orange-900/70 font-medium italic">
-                    {lang === 'te'
-                        ? 'ఆలయ మర్యాదను పాటించవలసిందిగా భక్తులను కోరుతున్నాము. ఆలయంలో ఎలక్ట్రానిక్ వస్తువులు అనుమతించబడవు.'
-                        : 'Devotees are requested to maintain the sanctity of the temple. Electronic items and leather goods are strictly prohibited inside the main sanctum.'}
+                    <span>
+                        {lang === 'te'
+                            ? 'ఆలయ మర్యాదను పాటించవలసిందిగా భక్తులను కోరుతున్నాము. ఆలయంలో ఎలక్ట్రానిక్ వస్తువులు అనుమతించబడవు.'
+                            : 'Devotees are requested to maintain the sanctity of the temple. Electronic items and leather goods are strictly prohibited inside the main sanctum.'}
+                    </span>
                 </p>
             </div>
         </section>

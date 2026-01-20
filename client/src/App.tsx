@@ -40,7 +40,6 @@ import { SevaBooking } from './SevaBooking'
 import { Donations } from './Donations'
 import { AdminDashboard } from './AdminDashboard'
 import { Login } from './Login'
-const ThreeDDarshan = React.lazy(() => import('./ThreeDDarshan'))
 import { INITIAL_SITE_CONFIG, calculateTimeOfDay, templeService } from './templeService'
 import { Panchangam } from './Panchangam'
 import { AudioPlayer } from './AudioPlayer'
@@ -53,6 +52,70 @@ import { VisitorGuidelines } from './components/VisitorGuidelines'
 import { SiteConfig, Seva, DynamicPage, Announcement, NewsItem } from './types'
 import { TRANSLATIONS, Language } from './translations'
 import { supabase } from './supabaseClient'
+
+const ThreeDDarshan = React.lazy(() => import('./ThreeDDarshan'))
+
+// --- Stable Sub-Components ---
+
+interface NavItemProps {
+    id: string;
+    label: string;
+    view: string;
+    setView: (view: string) => void;
+    setIsMenuOpen: (open: boolean) => void;
+    icon?: any;
+}
+
+const NavItem = ({ id, label, view, setView, setIsMenuOpen }: NavItemProps) => (
+    <button
+        onClick={() => { setView(id); setIsMenuOpen(false); }}
+        className={`group relative px-4 py-2 transition-all duration-300 ${view === id
+            ? 'text-orange-600'
+            : 'text-gray-500 hover:text-orange-500'
+            }`}
+    >
+        <span className="text-[11px] font-black uppercase tracking-[0.15em] relative z-10">
+            {label}
+        </span>
+        {view === id && (
+            <span className="absolute bottom-0 left-4 right-4 h-0.5 bg-orange-500 rounded-full animate-in fade-in zoom-in duration-500" />
+        )}
+        <div className={`absolute inset-0 bg-transparent group-hover:bg-orange-50/50 rounded-lg transition-colors duration-300 -z-0 ${view === id ? 'bg-orange-50/30' : ''}`} />
+    </button>
+)
+
+interface AnnouncementBannerProps {
+    announcements: Announcement[];
+}
+
+const AnnouncementBanner = ({ announcements }: AnnouncementBannerProps) => {
+    const activeBanner = announcements.find(a => a.is_active && a.type === 'Banner');
+    const activeTicker = announcements.find(a => a.is_active && a.type === 'Ticker');
+
+    if (!activeBanner && !activeTicker) return null;
+
+    return (
+        <div className="z-[60] relative">
+            {activeBanner && (
+                <div className={`py-3 px-4 text-center text-xs font-black uppercase tracking-widest flex items-center justify-center gap-3 animate-in slide-in-from-top duration-700 ${activeBanner.priority === 'Urgent' ? 'bg-red-600 text-white' : activeBanner.priority === 'High' ? 'bg-orange-600 text-white' : 'bg-gray-900 text-white'}`}>
+                    <Bell className="w-4 h-4" />
+                    <span>{activeBanner.message}</span>
+                </div>
+            )}
+            {activeTicker && (
+                <div className="bg-gray-100 py-2 border-b border-gray-200 overflow-hidden">
+                    <div className="whitespace-nowrap flex animate-ticker">
+                        {[...Array(10)].map((_, i) => (
+                            <span key={i} className="px-10 text-[10px] font-black uppercase tracking-widest text-gray-500 flex items-center gap-2">
+                                <Sparkles className="w-3 h-3 text-orange-400" /> {activeTicker.message}
+                            </span>
+                        ))}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
 
 function App() {
     const [view, setView] = useState('home')
@@ -221,34 +284,6 @@ function App() {
         }
     };
 
-    const AnnouncementBanner = () => {
-        const activeBanner = announcements.find(a => a.is_active && a.type === 'Banner');
-        const activeTicker = announcements.find(a => a.is_active && a.type === 'Ticker');
-
-        if (!activeBanner && !activeTicker) return null;
-
-        return (
-            <div className="z-[60] relative">
-                {activeBanner && (
-                    <div className={`py-3 px-4 text-center text-xs font-black uppercase tracking-widest flex items-center justify-center gap-3 animate-in slide-in-from-top duration-700 ${activeBanner.priority === 'Urgent' ? 'bg-red-600 text-white' : activeBanner.priority === 'High' ? 'bg-orange-600 text-white' : 'bg-gray-900 text-white'}`}>
-                        <Bell className="w-4 h-4" />
-                        <span>{activeBanner.message}</span>
-                    </div>
-                )}
-                {activeTicker && (
-                    <div className="bg-gray-100 py-2 border-b border-gray-200 overflow-hidden">
-                        <div className="whitespace-nowrap flex animate-ticker">
-                            {[...Array(10)].map((_, i) => (
-                                <span key={i} className="px-10 text-[10px] font-black uppercase tracking-widest text-gray-500 flex items-center gap-2">
-                                    <Sparkles className="w-3 h-3 text-orange-400" /> {activeTicker.message}
-                                </span>
-                            ))}
-                        </div>
-                    </div>
-                )}
-            </div>
-        );
-    };
 
     const handleUser = (userData: any) => {
         setUser(userData)
@@ -273,51 +308,31 @@ function App() {
         setView('home')
     }
 
-    const NavItem = ({ id, label, icon: Icon }: { id: string, label: string, icon?: any }) => (
-        <button
-            onClick={() => { setView(id); setIsMenuOpen(false); }}
-            className={`group relative px-4 py-2 transition-all duration-300 ${view === id
-                ? 'text-orange-600'
-                : 'text-gray-500 hover:text-orange-500'
-                }`}
-        >
-            <span className="text-[11px] font-black uppercase tracking-[0.15em] relative z-10">
-                {label}
-            </span>
-            {view === id && (
-                <span className="absolute bottom-0 left-4 right-4 h-0.5 bg-orange-500 rounded-full animate-in fade-in zoom-in duration-500" />
-            )}
-            <div className={`absolute inset-0 bg-transparent group-hover:bg-orange-50/50 rounded-lg transition-colors duration-300 -z-0 ${view === id ? 'bg-orange-50/30' : ''}`} />
-        </button>
-    )
 
     return (
         <div className={`min-h-screen bg-[#fffaf5] text-gray-900 font-sans selection:bg-orange-600 selection:text-white`}>
-            {/* Background Audio (Conditional) */}
-            {config.enableAudio && <BackgroundMusic />}
-
-            <AnnouncementBanner />
+            <AnnouncementBanner announcements={announcements} />
 
             {/* Top Bar (Divine Branding) */}
             <div className="divine-topbar py-1.5 px-6 hidden md:block">
                 <div className="max-w-7xl mx-auto flex justify-between items-center">
                     <div className="flex items-center gap-6">
                         <span className="text-[10px] font-black uppercase tracking-[0.4em] text-orange-400 gold-text-glow animate-pulse">
-                            Om Namo Venkatesaya
+                            <span>Om Namo Venkatesaya</span>
                         </span>
                         <div className="h-3 w-px bg-white/20" />
                         <button onClick={() => setView('darshan3d')} className="text-[9px] font-bold uppercase tracking-widest text-white/70 hover:text-orange-300 transition-colors">
-                            3D Digital Darshan
+                            <span>3D Digital Darshan</span>
                         </button>
                     </div>
                     <div className="flex items-center gap-4">
                         {!isAdmin && (
                             <button onClick={() => setView('login')} className="text-[9px] font-bold uppercase tracking-widest text-white/70 hover:text-orange-300 transition-colors">
-                                Admin Login
+                                <span>Admin Login</span>
                             </button>
                         )}
                         <span className="text-[9px] font-bold uppercase tracking-widest text-orange-500/80">
-                            {new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+                            <span>{new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
                         </span>
                     </div>
                 </div>
@@ -330,30 +345,30 @@ function App() {
                         <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center shadow-xl shadow-orange-900/5 overflow-hidden border border-orange-100/50 group-hover:scale-105 transition-transform duration-500">
                             <img src="https://akcwdjwyhsnaxmtnjuqa.supabase.co/storage/v1/object/public/images/Logo/logo.png" alt="Logo" className="w-full h-full object-contain p-1" />
                         </div>
-                        <div className="hidden md:block">
-                            <h1 className="text-xl font-black text-[#5d0e14] heading-divine leading-none tracking-tight">
-                                {lang === 'te' ? t.templeName : config.templeName}
+                        <div className="block">
+                            <h1 className="text-lg md:text-xl font-black text-[#5d0e14] heading-divine leading-none tracking-tight">
+                                <span>{lang === 'te' ? t.templeName : config.templeName}</span>
                             </h1>
-                            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-orange-600/80 mt-1.5">
-                                {lang === 'te' ? 'ఉత్తరాంధ్ర తిరుమల దివ్య క్షేత్రం' : config.subTitle}
+                            <p className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] text-orange-600/80 mt-1.5">
+                                <span>{lang === 'te' ? 'ఉత్తరాంధ్ర తిరుమల దివ్య క్షేత్రం' : config.subTitle}</span>
                             </p>
                         </div>
                     </div>
 
                     {/* Desktop Nav */}
-                    <nav className="hidden lg:flex items-center gap-1">
-                        <NavItem label={t.home} id="home" icon={null} />
-                        <NavItem label={t.history} id="history" icon={null} />
-                        <NavItem label={t.sevas} id="seva" icon={null} />
-                        <NavItem label={t.gallery} id="gallery" icon={null} />
-                        <NavItem label={t.videoGallery} id="video" icon={null} />
-                        <NavItem label={t.news} id="news" icon={null} />
-                        <NavItem label={t.library} id="library" icon={null} />
-                        <NavItem label={t.threeDDarshan} id="darshan3d" icon={null} />
-                        <NavItem label={t.donation} id="donation" icon={null} />
-                        {isAdmin && <NavItem label={t.dashboard} id="admin" icon={null} />}
+                    <nav className="hidden md:flex items-center gap-1">
+                        <NavItem label={t.home} id="home" view={view} setView={setView} setIsMenuOpen={setIsMenuOpen} />
+                        <NavItem label={t.history} id="history" view={view} setView={setView} setIsMenuOpen={setIsMenuOpen} />
+                        <NavItem label={t.sevas} id="seva" view={view} setView={setView} setIsMenuOpen={setIsMenuOpen} />
+                        <NavItem label={t.gallery} id="gallery" view={view} setView={setView} setIsMenuOpen={setIsMenuOpen} />
+                        <NavItem label={t.videoGallery} id="video" view={view} setView={setView} setIsMenuOpen={setIsMenuOpen} />
+                        <NavItem label={t.news} id="news" view={view} setView={setView} setIsMenuOpen={setIsMenuOpen} />
+                        <NavItem label={t.library} id="library" view={view} setView={setView} setIsMenuOpen={setIsMenuOpen} />
+                        <NavItem label={t.threeDDarshan} id="darshan3d" view={view} setView={setView} setIsMenuOpen={setIsMenuOpen} />
+                        <NavItem label={t.donation} id="donation" view={view} setView={setView} setIsMenuOpen={setIsMenuOpen} />
+                        {isAdmin && <NavItem label={t.dashboard} id="admin" view={view} setView={setView} setIsMenuOpen={setIsMenuOpen} />}
                         {pages.filter(p => p.is_active && p.show_in_nav).map(page => (
-                            <NavItem key={page.slug} label={page.title} id={page.slug} icon={null} />
+                            <NavItem key={page.slug} label={page.title} id={page.slug} view={view} setView={setView} setIsMenuOpen={setIsMenuOpen} />
                         ))}
 
                         <div className="h-6 w-px bg-gray-200 mx-2" />
@@ -363,7 +378,7 @@ function App() {
                             onClick={() => setLang(lang === 'en' ? 'te' : 'en')}
                             className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border border-orange-200 hover:bg-orange-50 transition-all text-orange-700 bg-orange-50/20"
                         >
-                            {lang === 'en' ? 'తెలుగు' : 'English'}
+                            <span>{lang === 'en' ? 'తెలుగు' : 'English'}</span>
                         </button>
 
                         {user ? (
@@ -384,7 +399,7 @@ function App() {
                                 className="flex items-center gap-2 bg-gray-900 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-orange-600 transition-all shadow-xl shadow-gray-200 active:scale-95"
                             >
                                 <UserIcon className="w-4 h-4" />
-                                {t.login}
+                                <span>{t.login}</span>
                             </button>
                         )}
                     </nav>
@@ -399,16 +414,16 @@ function App() {
                 {isMenuOpen && (
                     <div className="md:hidden absolute top-full left-0 w-full bg-white border-b-2 border-orange-500/20 p-6 space-y-4 animate-in slide-in-from-top-4 duration-300 shadow-2xl z-50">
                         <div className="grid grid-cols-2 gap-3">
-                            <NavItem label={t.home} id="home" icon={null} />
-                            <NavItem label={t.history} id="history" icon={null} />
-                            <NavItem label={t.sevas} id="seva" icon={null} />
-                            <NavItem label={t.gallery} id="gallery" icon={null} />
-                            <NavItem label={t.videoGallery} id="video" icon={null} />
-                            <NavItem label={t.news} id="news" icon={null} />
-                            <NavItem label={t.library} id="library" icon={null} />
-                            <NavItem label={t.threeDDarshan} id="darshan3d" icon={null} />
+                            <NavItem label={t.home} id="home" view={view} setView={setView} setIsMenuOpen={setIsMenuOpen} />
+                            <NavItem label={t.history} id="history" view={view} setView={setView} setIsMenuOpen={setIsMenuOpen} />
+                            <NavItem label={t.sevas} id="seva" view={view} setView={setView} setIsMenuOpen={setIsMenuOpen} />
+                            <NavItem label={t.gallery} id="gallery" view={view} setView={setView} setIsMenuOpen={setIsMenuOpen} />
+                            <NavItem label={t.videoGallery} id="video" view={view} setView={setView} setIsMenuOpen={setIsMenuOpen} />
+                            <NavItem label={t.news} id="news" view={view} setView={setView} setIsMenuOpen={setIsMenuOpen} />
+                            <NavItem label={t.library} id="library" view={view} setView={setView} setIsMenuOpen={setIsMenuOpen} />
+                            <NavItem label={t.threeDDarshan} id="darshan3d" view={view} setView={setView} setIsMenuOpen={setIsMenuOpen} />
                             {pages.filter(p => p.is_active && p.show_in_nav).map(page => (
-                                <NavItem key={page.slug} label={page.title} id={page.slug} icon={null} />
+                                <NavItem key={page.slug} label={page.title} id={page.slug} view={view} setView={setView} setIsMenuOpen={setIsMenuOpen} />
                             ))}
                         </div>
 
@@ -416,13 +431,13 @@ function App() {
 
                         {!user && (
                             <button onClick={() => setView('login')} className="w-full py-4 bg-gray-900 text-white rounded-2xl font-black uppercase tracking-widest text-[11px] shadow-lg active:scale-95 transition-all">
-                                {t.login}
+                                <span>{t.login}</span>
                             </button>
                         )}
 
                         {user && (
                             <button onClick={handleLogout} className="w-full py-4 bg-red-50 text-red-600 rounded-2xl font-black uppercase tracking-widest text-[11px] border border-red-100 active:scale-95 transition-all">
-                                {t.logout}
+                                <span>{t.logout}</span>
                             </button>
                         )}
 
@@ -432,7 +447,7 @@ function App() {
                             className="w-full flex items-center justify-center gap-2 py-4 bg-orange-50 text-orange-700 font-black rounded-2xl border border-orange-100 text-[11px] uppercase tracking-widest"
                         >
                             <Globe className="w-4 h-4" />
-                            {lang === 'en' ? 'తెలుగు' : 'English'}
+                            <span>{lang === 'en' ? 'తెలుగు' : 'English'}</span>
                         </button>
                     </div>
                 )}
@@ -447,7 +462,7 @@ function App() {
                         </div>
                         <div>
                             <p className="text-sm font-black uppercase tracking-widest">{lang === 'te' ? 'యాప్‌ను ఇన్‌స్టాల్ చేయండి' : 'Install Temple App'}</p>
-                            <p className="text-[10px] opacity-80 font-bold">{lang === 'te' ? 'వేగవంతమైన అనుభవం కోసం హోమ్ స్క్రీన్‌కు జోడించండి' : 'Add to home screen for a faster, divine experience'}</p>
+                            <p className="text-[10px] opacity-80 font-bold"><span>{lang === 'te' ? 'వేగవంతమైన అనుభవం కోసం హోమ్ స్క్రీన్‌కు జోడించండి' : 'Add to home screen for a faster, divine experience'}</span></p>
                         </div>
                     </div>
                     <div className="flex items-center gap-4">
@@ -455,7 +470,7 @@ function App() {
                             onClick={handleInstallClick}
                             className="bg-white text-orange-600 px-4 py-2 rounded-lg text-xs font-black uppercase tracking-widest hover:bg-orange-50 transition-colors shadow-sm"
                         >
-                            {lang === 'te' ? 'ఇన్‌స్టాల్' : 'Install'}
+                            <span>{lang === 'te' ? 'ఇన్‌స్టాల్' : 'Install'}</span>
                         </button>
                         <button onClick={() => setShowInstallBanner(false)} className="p-1 hover:bg-white/10 rounded-full transition-colors">
                             <X className="w-5 h-5" />
@@ -504,22 +519,22 @@ function App() {
                             )}
 
                             {/* Golden Overlay Pattern */}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-black/20 flex flex-col justify-end pb-8 px-4 md:px-20 z-10">
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-black/20 flex flex-col justify-end pb-12 md:pb-20 px-6 md:px-20 z-10">
                                 <div className="container mx-auto animate-fade-in-up">
-                                    <div className="w-16 h-1 bg-amber-500 mb-6"></div>
-                                    <h2 className="text-4xl md:text-6xl font-serif font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-amber-400 to-amber-200 drop-shadow-sm mb-2 leading-tight">
+                                    <div className="w-12 md:w-16 h-1 bg-amber-500 mb-4 md:mb-6"></div>
+                                    <h2 className="text-3xl md:text-6xl font-serif font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-amber-400 to-amber-200 drop-shadow-sm mb-2 leading-tight">
                                         {lang === 'te' ? 'ఉత్తరాంధ్ర తిరుపతి' : 'Uttarandhra Tirupati'}
                                     </h2>
-                                    <p className="text-white text-xl md:text-2xl font-light tracking-widest uppercase mb-8 pl-1 border-l-0 opacity-90">
+                                    <p className="text-white text-lg md:text-2xl font-light tracking-widest uppercase mb-6 md:mb-8 pl-1 border-l-0 opacity-95">
                                         {lang === 'te' ? 'కలియుగ వైకుంఠం • పెందుర్తి' : 'Kali Yuga Vaikuntham • Pendurthi'}
                                     </p>
-                                    <div className="flex flex-wrap gap-6">
-                                        <button onClick={() => setView('seva')} className="bg-orange-600 text-white px-10 py-5 rounded-2xl font-black flex items-center gap-3 hover:bg-orange-500 transition-all group active:scale-95 shadow-xl shadow-orange-900/20">
-                                            {t.bookSeva} <ArrowRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />
+                                    <div className="flex flex-col sm:flex-row gap-4 md:gap-6">
+                                        <button onClick={() => setView('seva')} className="bg-orange-600 text-white px-8 md:px-10 py-4 md:py-5 rounded-2xl font-black flex items-center justify-center gap-3 hover:bg-orange-500 transition-all group active:scale-95 shadow-xl shadow-orange-900/20 text-sm md:text-base">
+                                            <span>{t.bookSeva}</span> <ArrowRight className="w-5 h-5 md:w-6 md:h-6 group-hover:translate-x-2 transition-transform" />
                                         </button>
-                                        <a href={config.liveLink} target="_blank" rel="noreferrer" className="glass-morphism text-white px-10 py-5 rounded-2xl font-black flex items-center gap-3 hover:bg-white/10 transition-all active:scale-95 border-white/10">
+                                        <a href={config.liveLink} target="_blank" rel="noreferrer" className="glass-morphism text-white px-8 md:px-10 py-4 md:py-5 rounded-2xl font-black flex items-center justify-center gap-3 hover:bg-white/10 transition-all active:scale-95 border-white/10 text-sm md:text-base">
                                             <div className="w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.8)]" />
-                                            {t.watchLive}
+                                            <span>{t.watchLive}</span>
                                         </a>
                                     </div>
                                 </div>
@@ -551,8 +566,8 @@ function App() {
                                     <div className={`p-3 rounded-2xl bg-white/50 mb-3 ${stat.color} shadow-inner group-hover:bg-orange-600 group-hover:text-white transition-colors`}>
                                         <stat.icon size={20} />
                                     </div>
-                                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">{stat.label}</p>
-                                    <p className="text-sm font-black text-gray-900">{stat.value}</p>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1"><span>{stat.label}</span></p>
+                                    <p className="text-sm font-black text-gray-900"><span>{stat.value}</span></p>
                                 </div>
                             ))}
                         </div>
@@ -561,11 +576,11 @@ function App() {
                         <section className="space-y-10">
                             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                                 <div>
-                                    <span className="inline-block px-4 py-1.5 bg-orange-100 text-orange-700 text-[10px] font-black uppercase tracking-widest rounded-full mb-4">Spiritual Calendar</span>
-                                    <h2 className="text-4xl font-black text-gray-900 heading-divine leading-none">{lang === 'te' ? 'జరుగుతున్న' : 'Ongoing'} <span className="text-orange-600">{lang === 'te' ? 'ఉత్సవాలు' : 'Events'}</span></h2>
+                                    <span className="inline-block px-4 py-1.5 bg-orange-100 text-orange-700 text-[10px] font-black uppercase tracking-widest rounded-full mb-4"><span>Spiritual Calendar</span></span>
+                                    <h2 className="text-4xl font-black text-gray-900 heading-divine leading-none"><span>{lang === 'te' ? 'జరుగుతున్న' : 'Ongoing'}</span> <span className="text-orange-600"><span>{lang === 'te' ? 'ఉత్సవాలు' : 'Events'}</span></span></h2>
                                 </div>
                                 <button onClick={() => setView('seva')} className="text-xs font-black uppercase tracking-widest text-orange-600 flex items-center gap-2 hover:translate-x-2 transition-transform">
-                                    View All Sevas <ArrowRight className="w-4 h-4" />
+                                    <span>View All Sevas</span> <ArrowRight className="w-4 h-4" />
                                 </button>
                             </div>
 
@@ -577,11 +592,11 @@ function App() {
                                 ].map((event, i) => (
                                     <div key={i} className="group relative rounded-[40px] overflow-hidden bg-white shadow-xl hover:shadow-2xl transition-all border border-orange-50 h-[400px]">
                                         <img src={event.img} alt={event.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000 opacity-90" />
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex flex-col justify-end p-8">
-                                            <p className="text-orange-400 text-[10px] font-black uppercase tracking-[0.3em] mb-2">{event.date}</p>
-                                            <h4 className="text-2xl font-black text-white heading-divine mb-4 group-hover:text-orange-300 transition-colors">{event.title}</h4>
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/20 to-transparent flex flex-col justify-end p-6 md:p-8">
+                                            <p className="text-orange-400 text-[10px] font-black uppercase tracking-[0.3em] mb-2"><span>{event.date}</span></p>
+                                            <h4 className="text-xl md:text-2xl font-black text-white heading-divine mb-4 group-hover:text-orange-300 transition-colors"><span>{event.title}</span></h4>
                                             <button onClick={() => setView('donation')} className="w-full py-4 bg-white/10 backdrop-blur-md border border-white/20 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-orange-600 hover:border-orange-600 transition-all">
-                                                Participate Now
+                                                <span>Participate Now</span>
                                             </button>
                                         </div>
                                     </div>
@@ -601,15 +616,15 @@ function App() {
                                             <Clock className="w-8 h-8 text-orange-600" />
                                         </div>
                                         <div>
-                                            <h3 className="text-3xl font-black text-gray-900 heading-divine">{t.dailyRituals}</h3>
-                                            <p className="text-orange-600/60 text-xs font-black uppercase tracking-[0.2em] mt-1">{t.templeSchedule}</p>
+                                            <h3 className="text-3xl font-black text-gray-900 heading-divine"><span>{t.dailyRituals}</span></h3>
+                                            <p className="text-orange-600/60 text-xs font-black uppercase tracking-[0.2em] mt-1"><span>{t.templeSchedule}</span></p>
                                         </div>
                                     </div>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         {Object.entries(config.timings).map(([key, value]) => (
                                             <div key={key} className="flex justify-between items-center p-5 bg-white/40 rounded-2xl border border-orange-100/20 hover:border-orange-500/30 transition-all group hover:shadow-lg hover:shadow-orange-900/5">
-                                                <span className="text-gray-600 font-black text-sm uppercase tracking-wide capitalize">{key.replace(/([A-Z])/g, ' $1')}</span>
-                                                <span className="text-orange-900 font-extrabold text-lg group-hover:text-orange-600 transition-colors">{value}</span>
+                                                <span className="text-gray-600 font-black text-sm uppercase tracking-wide capitalize"><span>{key.replace(/([A-Z])/g, ' $1')}</span></span>
+                                                <span className="text-orange-900 font-extrabold text-lg group-hover:text-orange-600 transition-colors"><span>{value}</span></span>
                                             </div>
                                         ))}
                                     </div>
@@ -622,15 +637,15 @@ function App() {
                                             <img src={config.historyImageUrl} alt="Temple Statue" className="h-full w-full object-cover" />
                                             <div className="absolute inset-0 bg-gradient-to-r from-transparent to-white/10 md:to-transparent" />
                                         </div>
-                                        <div className="p-10 md:w-3/5">
-                                            <div className="flex items-center gap-5 mb-8">
-                                                <div className="p-4 bg-amber-100/50 rounded-2xl">
-                                                    <History className="w-8 h-8 text-amber-600" />
+                                        <div className="p-6 md:p-10 md:w-3/5">
+                                            <div className="flex items-center gap-4 md:gap-5 mb-6 md:mb-8">
+                                                <div className="p-3 md:p-4 bg-amber-100/50 rounded-2xl">
+                                                    <History className="w-6 h-6 md:w-8 md:h-8 text-amber-600" />
                                                 </div>
-                                                <h3 className="text-3xl font-black text-gray-900 heading-divine">{t.sthalaPuranam}</h3>
+                                                <h3 className="text-2xl md:text-3xl font-black text-gray-900 heading-divine"><span>{t.sthalaPuranam}</span></h3>
                                             </div>
-                                            <p className="text-gray-600 leading-loose text-lg italic border-l-4 border-orange-500/20 pl-8 bg-orange-50/30 py-4 rounded-r-2xl">
-                                                {lang === 'te' ? config.historyContent : config.historyContent}
+                                            <p className="text-gray-600 leading-loose text-base md:text-lg italic border-l-4 border-orange-500/20 pl-6 md:pl-8 bg-orange-50/30 py-4 rounded-r-2xl">
+                                                <span>{lang === 'te' ? config.historyContent : config.historyContent}</span>
                                             </p>
                                         </div>
                                     </div>
@@ -653,16 +668,16 @@ function App() {
                                     </div>
                                     <div className="space-y-8 relative">
                                         <div className="border-b border-white/10 pb-6 group/item hover:translate-x-2 transition-transform">
-                                            <p className="text-[10px] font-black opacity-60 uppercase tracking-[0.3em] mb-2">{t.crowdStatus}</p>
-                                            <p className="text-3xl font-black uppercase text-orange-300">{lang === 'te' ? 'సాధారణం' : 'Moderate'}</p>
+                                            <p className="text-[10px] font-black opacity-60 uppercase tracking-[0.3em] mb-2"><span>{t.crowdStatus}</span></p>
+                                            <p className="text-3xl font-black uppercase text-orange-300"><span>{lang === 'te' ? 'సాధారణం' : 'Moderate'}</span></p>
                                         </div>
                                         <div className="border-b border-white/10 pb-6 group/item hover:translate-x-2 transition-transform">
-                                            <p className="text-[10px] font-black opacity-60 uppercase tracking-[0.3em] mb-2">{t.waitTime}</p>
-                                            <p className="text-4xl font-black mt-1">~45 <span className="text-lg opacity-70">{lang === 'te' ? 'నిమిషాలు' : 'Mins'}</span></p>
+                                            <p className="text-[10px] font-black opacity-60 uppercase tracking-[0.3em] mb-2"><span>{t.waitTime}</span></p>
+                                            <p className="text-4xl font-black mt-1"><span>~45 </span><span className="text-lg opacity-70"><span>{lang === 'te' ? 'నిమిషాలు' : 'Mins'}</span></span></p>
                                         </div>
                                         <div className="group/item hover:translate-x-2 transition-transform">
-                                            <p className="text-[10px] font-black opacity-60 uppercase tracking-[0.3em] mb-2">{t.annadanam}</p>
-                                            <p className="text-3xl font-black text-green-400">{lang === 'te' ? 'అందుబాటులో ఉన్నాయి' : 'Available'}</p>
+                                            <p className="text-[10px] font-black opacity-60 uppercase tracking-[0.3em] mb-2"><span>{t.annadanam}</span></p>
+                                            <p className="text-3xl font-black text-green-400"><span>{lang === 'te' ? 'అందుబాటులో ఉన్నాయి' : 'Available'}</span></p>
                                         </div>
                                     </div>
                                 </div>
@@ -671,11 +686,11 @@ function App() {
                                 <div id="location" className="bg-white rounded-[32px] p-8 shadow-sm border border-orange-50">
                                     <h4 className="text-xl font-black text-gray-900 mb-6 flex items-center gap-2">
                                         <MapPin className="w-6 h-6 text-red-500" />
-                                        {t.arrivalDetails}
+                                        <span>{t.arrivalDetails}</span>
                                     </h4>
                                     <div className="space-y-4">
                                         <div className="p-4 bg-gray-50 rounded-2xl text-sm font-medium text-gray-600 border border-gray-100 italic">
-                                            {config.address}
+                                            <span>{config.address}</span>
                                         </div>
                                         <iframe
                                             src={config.mapEmbedUrl || 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d237.41112734036318!2d83.21121301276729!3d17.811517714706405!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a39671fbc497e33%3A0xfb3d22187ebdc15!2sUTTHARANDHRA%20TIRUPATI%20(%20Venkateswara%20Swamy%20Temple%20)!5e0!3m2!1sen!2sin!4v1768306031383!5m2!1sen!2sin'}
@@ -693,11 +708,11 @@ function App() {
                         <section className="animate-divine" style={{ animationDelay: '400ms' }}>
                             <div className="flex justify-between items-end mb-10">
                                 <div>
-                                    <h3 className="text-4xl font-black text-gray-900 heading-divine leading-tight">Latest Announcements</h3>
-                                    <p className="text-orange-600 font-bold uppercase tracking-widest text-[10px] mt-2">Temple Updates & News</p>
+                                    <h3 className="text-4xl font-black text-gray-900 heading-divine leading-tight"><span>Latest Announcements</span></h3>
+                                    <p className="text-orange-600 font-bold uppercase tracking-widest text-[10px] mt-2"><span>Temple Updates & News</span></p>
                                 </div>
                                 <button onClick={() => setView('news')} className="group flex items-center gap-3 bg-white px-8 py-4 rounded-2xl border border-orange-100 shadow-sm hover:shadow-xl transition-all active:scale-95 text-xs font-black uppercase tracking-widest text-orange-950">
-                                    View All News <ArrowRight className="w-5 h-5 text-orange-500 group-hover:translate-x-2 transition-transform" />
+                                    <span>View All News</span> <ArrowRight className="w-5 h-5 text-orange-500 group-hover:translate-x-2 transition-transform" />
                                 </button>
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -721,7 +736,7 @@ function App() {
                                                 {item.content}
                                             </p>
                                             <button onClick={() => setView('news')} className="mt-auto text-orange-600 font-extrabold text-[10px] uppercase tracking-widest flex items-center gap-2 hover:gap-3 transition-all">
-                                                Read More <ArrowRight className="w-4 h-4" />
+                                                <span>Read More</span> <ArrowRight className="w-4 h-4" />
                                             </button>
                                         </div>
                                     </div>
@@ -738,9 +753,9 @@ function App() {
                 {view === 'gallery' && (
                     <div className="max-w-7xl mx-auto px-4 py-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
                         <div className="text-center mb-16">
-                            <span className="inline-block px-4 py-1.5 bg-orange-100 text-orange-700 text-[10px] font-black uppercase tracking-widest rounded-full mb-4">{t.templeGallery}</span>
-                            <h2 className="text-5xl font-black text-gray-900 mb-4">{lang === 'te' ? 'దివ్య' : 'Divine'} <span className="text-orange-600">{lang === 'te' ? 'దర్శనం' : 'Glimpses'}</span></h2>
-                            <p className="text-gray-500 max-w-2xl mx-auto font-medium">{t.exploreBeauty}</p>
+                            <span className="inline-block px-4 py-1.5 bg-orange-100 text-orange-700 text-[10px] font-black uppercase tracking-widest rounded-full mb-4"><span>{t.templeGallery}</span></span>
+                            <h2 className="text-5xl font-black text-gray-900 mb-4"><span>{lang === 'te' ? 'దివ్య' : 'Divine'}</span> <span className="text-orange-600"><span>{lang === 'te' ? 'దర్శనం' : 'Glimpses'}</span></span></h2>
+                            <p className="text-gray-500 max-w-2xl mx-auto font-medium"><span>{t.exploreBeauty}</span></p>
                         </div>
 
 
@@ -749,9 +764,9 @@ function App() {
                                 <div key={item.id || idx} className="group relative rounded-[32px] overflow-hidden bg-white shadow-xl hover:shadow-2xl transition-all border border-orange-50 aspect-[4/5]">
                                     <img src={item.url} alt={item.caption} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" />
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col justify-end p-8 translate-y-4 group-hover:translate-y-0">
-                                        <p className="text-white text-xl font-black mb-2">{item.caption}</p>
+                                        <p className="text-white text-xl font-black mb-2"><span>{item.caption}</span></p>
                                         <div className="h-1 w-12 bg-orange-500 rounded-full mb-4" />
-                                        <p className="text-orange-100/80 text-xs font-bold uppercase tracking-widest">{item.type || 'Sacred Image'}</p>
+                                        <p className="text-orange-100/80 text-xs font-bold uppercase tracking-widest"><span>{item.type || 'Sacred Image'}</span></p>
                                     </div>
                                 </div>
                             )) : (
@@ -774,7 +789,7 @@ function App() {
                         <Suspense fallback={
                             <div className="min-h-screen flex flex-col items-center justify-center bg-[#fffaf5]">
                                 <div className="w-16 h-16 border-4 border-orange-200 border-t-orange-600 rounded-full animate-spin mb-4" />
-                                <p className="text-orange-600 font-black uppercase tracking-widest animate-pulse">Invoking Divine 3D Vision...</p>
+                                <p className="text-orange-600 font-black uppercase tracking-widest animate-pulse"><span>Invoking Divine 3D Vision...</span></p>
                             </div>
                         }>
                             <ThreeDDarshan config={config} />
@@ -790,7 +805,7 @@ function App() {
                         {loading ? (
                             <div className="flex flex-col items-center justify-center py-20">
                                 <Loader2 className="w-12 h-12 text-orange-600 animate-spin mb-4" />
-                                <p className="text-gray-400 font-bold uppercase tracking-widest">Calling Divine Content...</p>
+                                <p className="text-gray-400 font-bold uppercase tracking-widest"><span>Calling Divine Content...</span></p>
                             </div>
                         ) : (
                             <div className="bg-white p-12 md:p-20 rounded-[64px] shadow-2xl shadow-orange-900/5 relative overflow-hidden border border-gray-100">
@@ -800,19 +815,19 @@ function App() {
                                     if (!page) return (
                                         <div className="text-center">
                                             <AlertTriangle className="w-20 h-20 text-gray-100 mx-auto mb-6" />
-                                            <h2 className="text-4xl font-black text-gray-900 heading-divine mb-4">404: Page Not Found</h2>
-                                            <p className="text-gray-500 font-bold mb-8">The content you are seeking has moved into the ethereal realm.</p>
-                                            <button onClick={() => setView('home')} className="px-10 py-4 bg-orange-600 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-orange-700 transition-all">Return to Home</button>
+                                            <h2 className="text-4xl font-black text-gray-900 heading-divine mb-4"><span>404: Page Not Found</span></h2>
+                                            <p className="text-gray-500 font-bold mb-8"><span>The content you are seeking has moved into the ethereal realm.</span></p>
+                                            <button onClick={() => setView('home')} className="px-10 py-4 bg-orange-600 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-orange-700 transition-all"><span>Return to Home</span></button>
                                         </div>
                                     );
                                     return (
                                         <div className="prose prose-orange max-w-none">
-                                            <h1 className="text-5xl font-black text-gray-900 heading-divine mb-4 leading-tight">{page.title}</h1>
+                                            <h1 className="text-5xl font-black text-gray-900 heading-divine mb-4 leading-tight"><span>{page.title}</span></h1>
                                             <div className="w-20 h-1.5 bg-orange-600 rounded-full mb-12" />
                                             <div className="text-lg text-gray-700 leading-relaxed font-medium space-y-6" dangerouslySetInnerHTML={{ __html: page.content }} />
                                             {page.meta_description && (
                                                 <div className="mt-12 pt-12 border-t border-gray-100 italic text-gray-400 text-sm">
-                                                    {page.meta_description}
+                                                    <span>{page.meta_description}</span>
                                                 </div>
                                             )}
                                         </div>
@@ -833,16 +848,16 @@ function App() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-16 mb-20 border-b border-white/10 pb-20">
                         {/* Contact Column */}
                         <div className="space-y-8">
-                            <h4 className="text-xl font-bold uppercase tracking-[0.2em] text-[#d4ac0d] border-b-2 border-[#d4ac0d] pb-4 inline-block">Contact Us</h4>
+                            <h4 className="text-xl font-bold uppercase tracking-[0.2em] text-[#d4ac0d] border-b-2 border-[#d4ac0d] pb-4 inline-block"><span>Contact Us</span></h4>
                             <div className="space-y-6">
-                                <p className="text-lg font-bold tracking-tight text-white/90 leading-snug">{config.templeName}</p>
-                                <p className="text-sm text-white/60 leading-relaxed max-w-xs italic">{config.address}</p>
+                                <p className="text-lg font-bold tracking-tight text-white/90 leading-snug"><span>{config.templeName}</span></p>
+                                <p className="text-sm text-white/60 leading-relaxed max-w-xs italic"><span>{config.address}</span></p>
                                 <div className="space-y-4 pt-4">
                                     <a href={`mailto:${config.contactEmail}`} className="flex items-center gap-3 text-sm hover:text-orange-400 transition-colors">
-                                        <Mail className="w-4 h-4 text-orange-400 text-xs" /> {config.contactEmail}
+                                        <Mail className="w-4 h-4 text-orange-400 text-xs" /> <span>{config.contactEmail}</span>
                                     </a>
                                     <a href={`tel:${config.contactPhone}`} className="flex items-center gap-3 text-sm hover:text-orange-400 transition-colors">
-                                        <Phone className="w-4 h-4 text-orange-400" /> {config.contactPhone}
+                                        <Phone className="w-4 h-4 text-orange-400" /> <span>{config.contactPhone}</span>
                                     </a>
                                 </div>
                             </div>
@@ -850,23 +865,28 @@ function App() {
 
                         {/* Quick Links Column */}
                         <div className="space-y-8">
-                            <h4 className="text-xl font-bold uppercase tracking-[0.2em] text-[#d4ac0d] border-b-2 border-[#d4ac0d] pb-4 inline-block">Quick Links</h4>
+                            <h4 className="text-xl font-bold uppercase tracking-[0.2em] text-[#d4ac0d] border-b-2 border-[#d4ac0d] pb-4 inline-block"><span>Quick Links</span></h4>
                             <ul className="space-y-4 text-sm font-bold uppercase tracking-widest text-white/80">
                                 <li className="hover:text-orange-400 transition-all cursor-pointer flex items-center gap-2 group" onClick={() => setView('home')}>
-                                    <span className="w-1.5 h-1.5 bg-orange-500 rounded-full group-hover:scale-150 transition-transform" /> Home
+                                    <span className="w-1.5 h-1.5 bg-orange-500 rounded-full group-hover:scale-150 transition-transform" /> <span>Home</span>
                                 </li>
                                 <li className="hover:text-orange-400 transition-all cursor-pointer flex items-center gap-2 group" onClick={() => setView('history')}>
-                                    <span className="w-1.5 h-1.5 bg-orange-500 rounded-full group-hover:scale-150 transition-transform" /> History & Timings
+                                    <span className="w-1.5 h-1.5 bg-orange-500 rounded-full group-hover:scale-150 transition-transform" /> <span>History & Timings</span>
                                 </li>
                                 <li className="hover:text-orange-400 transition-all cursor-pointer flex items-center gap-2 group" onClick={() => setView('seva')}>
-                                    <span className="w-1.5 h-1.5 bg-orange-500 rounded-full group-hover:scale-150 transition-transform" /> Darshan Booking
+                                    <span className="w-1.5 h-1.5 bg-orange-500 rounded-full group-hover:scale-150 transition-transform" /> <span>Darshan Booking</span>
                                 </li>
                                 <li className="hover:text-orange-400 transition-all cursor-pointer flex items-center gap-2 group" onClick={() => setView('donation')}>
-                                    <span className="w-1.5 h-1.5 bg-orange-500 rounded-full group-hover:scale-150 transition-transform" /> E-Hundi Donation
+                                    <span className="w-1.5 h-1.5 bg-orange-500 rounded-full group-hover:scale-150 transition-transform" /> <span>E-Hundi Donation</span>
                                 </li>
+                                {!isAdmin && (
+                                    <li className="hover:text-orange-400 transition-all cursor-pointer flex items-center gap-2 group" onClick={() => setView('login')}>
+                                        <span className="w-1.5 h-1.5 bg-orange-500 rounded-full group-hover:scale-150 transition-transform" /> <span>Admin Login</span>
+                                    </li>
+                                )}
                             </ul>
 
-                            <h4 className="text-xl font-bold uppercase tracking-[0.2em] text-[#d4ac0d] border-b-2 border-[#d4ac0d] pb-4 pt-4 inline-block">Official Channel</h4>
+                            <h4 className="text-xl font-bold uppercase tracking-[0.2em] text-[#d4ac0d] border-b-2 border-[#d4ac0d] pb-4 pt-4 inline-block"><span>Official Channel</span></h4>
                             <div className="pt-2 space-y-3">
                                 <a
                                     href="https://www.youtube.com/@ramanujampendurthi1012"
@@ -878,8 +898,8 @@ function App() {
                                         <Youtube className="w-6 h-6 text-white" />
                                     </div>
                                     <div>
-                                        <p className="text-xs font-black uppercase tracking-widest text-red-500">Subscribe on</p>
-                                        <p className="text-sm font-bold text-white">YouTube Channel</p>
+                                        <p className="text-xs font-black uppercase tracking-widest text-red-500"><span>Subscribe on</span></p>
+                                        <p className="text-sm font-bold text-white"><span>YouTube Channel</span></p>
                                     </div>
                                 </a>
 
@@ -893,8 +913,8 @@ function App() {
                                         <Phone className="w-5 h-5 text-white" />
                                     </div>
                                     <div>
-                                        <p className="text-xs font-black uppercase tracking-widest text-green-500">Join our</p>
-                                        <p className="text-sm font-bold text-white">WhatsApp Channel</p>
+                                        <p className="text-xs font-black uppercase tracking-widest text-green-500"><span>Join our</span></p>
+                                        <p className="text-sm font-bold text-white"><span>WhatsApp Channel</span></p>
                                     </div>
                                 </a>
                             </div>
@@ -902,12 +922,12 @@ function App() {
 
                         {/* Timings Column */}
                         <div className="space-y-8">
-                            <h4 className="text-xl font-bold uppercase tracking-[0.2em] text-[#d4ac0d] border-b-2 border-[#d4ac0d] pb-4 inline-block">Temple Timings</h4>
+                            <h4 className="text-xl font-bold uppercase tracking-[0.2em] text-[#d4ac0d] border-b-2 border-[#d4ac0d] pb-4 inline-block"><span>Temple Timings</span></h4>
                             <div className="space-y-4 text-sm bg-black/20 p-6 rounded-2xl border border-white/5">
                                 {Object.entries(config.timings).map(([key, value]) => (
                                     <div key={key} className="flex justify-between items-center border-b border-white/5 pb-2 last:border-0 last:pb-0">
-                                        <span className="text-white/40 uppercase text-[10px] font-black">{key.replace(/([A-Z])/g, ' $1')}:</span>
-                                        <span className={`font-black tracking-tight ${key.toLowerCase().includes('break') ? 'text-red-400' : 'text-orange-100'}`}>{value}</span>
+                                        <span className="text-white/40 uppercase text-[10px] font-black"><span>{key.replace(/([A-Z])/g, ' $1')}:</span></span>
+                                        <span className={`font-black tracking-tight ${key.toLowerCase().includes('break') ? 'text-red-400' : 'text-orange-100'}`}><span>{value}</span></span>
                                     </div>
                                 ))}
                             </div>
@@ -918,10 +938,10 @@ function App() {
                     <div className="text-center space-y-12">
                         <div className="space-y-4">
                             <p className="text-[10px] font-black opacity-40 uppercase tracking-[0.3em]">
-                                © {new Date().getFullYear()} Uttarandhra Tirumala. All Rights Reserved.
+                                <span>© {new Date().getFullYear()} Uttarandhra Tirumala. All Rights Reserved.</span>
                             </p>
                             <p className="text-[9px] font-black opacity-30 uppercase tracking-[0.1em]">
-                                Designed & Developed by JMRSAI TECHNOLOGIES
+                                <span>Designed & Developed by JMRSAI TECHNOLOGIES</span>
                             </p>
                         </div>
 
@@ -929,14 +949,14 @@ function App() {
                         <div className="flex flex-col items-center gap-4">
                             <div className="inline-flex items-center gap-3 bg-black/40 px-6 py-2.5 rounded-full border border-[#d4ac0d]/20 shadow-xl">
                                 <div className="w-2 h-2 bg-green-500 rounded-full animate-ping" />
-                                <span className="text-[10px] font-black uppercase tracking-widest text-[#d4ac0d]">Live Visitors: {liveVisitors}</span>
+                                <span className="text-[10px] font-black uppercase tracking-widest text-[#d4ac0d]"><span><span>Live Visitors: {liveVisitors}</span></span></span>
                             </div>
-                            <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Total Blessed Visits: {totalVisits.toLocaleString()}+</p>
+                            <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest"><span><span>Total Blessed Visits: {totalVisits.toLocaleString()}+</span></span></p>
                         </div>
 
                         <div className="pt-12">
                             <h2 className="text-3xl font-black heading-divine gold-text-glow tracking-[0.5em] text-[#d4ac0d] uppercase opacity-80">
-                                Om Namo Venkatesaya
+                                <span>Om Namo Venkatesaya</span>
                             </h2>
                         </div>
                     </div>
@@ -944,8 +964,8 @@ function App() {
             </footer>
             {/* Persistent Audio Player */}
             <AudioPlayer lang={lang} t={t} />
-            {/* Background Divine Chant */}
-            <BackgroundMusic />
+            {/* Background Divine Chant (Conditional) */}
+            {config.enableAudio && <BackgroundMusic />}
         </div>
     )
 }
